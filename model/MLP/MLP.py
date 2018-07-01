@@ -1,5 +1,7 @@
 import configparser
 import tensorflow as tf
+import traceback
+from util import fn_util
 
 
 class MLP:
@@ -14,6 +16,7 @@ class MLP:
     def __init_hyper_param(self):
         self.learning_rate = self.config.getfloat('Hyper Parameters', 'learning_rate')
         self.batch_size = self.config.getint('Hyper Parameters', 'batch_size')
+        self.echo = self.config.getint('Hyper Parameters', 'echo')
         self.type = self.config.get('Hyper Parameters', 'type')
         self.log_dir = self.config.get('Hyper Parameters', 'log_dir')
         self.loss_fn = self.config.get('Hyper Parameters', 'loss_fn')
@@ -52,9 +55,11 @@ class MLP:
                 else:
                     n_in = int(self.network.get_shape()[-1])
                     n_units = self.config.getint(layer, 'unit')
-                    W = tf.Variable(tf.truncated_normal([n_in, n_units], stddev=0.1))
+                    # W = tf.Variable(tf.truncated_normal([n_in, n_units], stddev=0.1))
+                    W = tf.get_variable("Weight", dtype=tf.float32, initializer=tf.random_normal_initializer())
                     self.__var_summaries(W)
-                    b = tf.Variable(tf.constant(0.1, shape=[n_units]))
+                    # b = tf.Variable(tf.constant(0.1, shape=[n_units]))
+                    b = tf.get_variable("Bias", dtype=tf.float32, initializer=tf.constant_initializer(value=0.1))
                     self.__var_summaries(b)
                     with tf.name_scope('Wx_plus_b'):
                         preactivate = tf.matmul(self.network, W) + b
@@ -91,8 +96,8 @@ class MLP:
 
     def train(self, data_feed):
         with tf.Session() as sess:
-            sess = tf_debug.LocalCLIDebugWrapperSession(sess)
-            sess.add_tensor_filter('has_inf_or_nan', tf_debug.has_inf_or_nan)
+            # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+            # sess.add_tensor_filter('has_inf_or_nan', tf_debug.has_inf_or_nan)
 
             merged = tf.summary.merge_all()
             train_writer = tf.summary.FileWriter(self.log_dir + '/train', sess.graph)
@@ -105,8 +110,8 @@ class MLP:
             # for i in range(self.num_epochs):
             try:
                 i = 0
-                # while True:
-                while i < EPOCH:
+                while True:
+                # while i < EPOCH:
                     if i % 10 == 0:
                         test_xs, test_ys = data_feed.get_test_batch(one_hot=self.one_hot)
                         summary, acc = sess.run([merged, self.accuracy], feed_dict={self.x: test_xs, self.y_: test_ys})
