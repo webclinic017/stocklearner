@@ -41,6 +41,7 @@ learning_rate = 0.001
 batch_size = 200
 log_dir = .models/MLP/log/
 loss_fn = cross_entropy
+l2_loss = true
 opt_fn = tf.train.GradientDescentOptimizer
 acc_fn = correct_prediction
 model_dir = .models/MLP/model/

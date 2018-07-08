@@ -56,10 +56,10 @@ class MLP:
                     n_in = int(self.network.get_shape()[-1])
                     n_units = self.config.getint(layer, 'unit')
                     # W = tf.Variable(tf.truncated_normal([n_in, n_units], stddev=0.1))
-                    W = tf.get_variable("Weight", dtype=tf.float32, initializer=tf.random_normal_initializer())
+                    W = tf.get_variable("Weight", dtype=tf.float32, initializer=tf.random_normal_initializer(), shape=[n_in, n_units])
                     self.__var_summaries(W)
                     # b = tf.Variable(tf.constant(0.1, shape=[n_units]))
-                    b = tf.get_variable("Bias", dtype=tf.float32, initializer=tf.constant_initializer(value=0.1))
+                    b = tf.get_variable("Bias", dtype=tf.float32, initializer=tf.constant_initializer(value=0.1), shape=[n_units])
                     self.__var_summaries(b)
                     with tf.name_scope('Wx_plus_b'):
                         preactivate = tf.matmul(self.network, W) + b
@@ -110,8 +110,8 @@ class MLP:
             # for i in range(self.num_epochs):
             try:
                 i = 0
-                while True:
-                # while i < EPOCH:
+                # while True:
+                while i < self.echo:
                     if i % 10 == 0:
                         test_xs, test_ys = data_feed.get_test_batch(one_hot=self.one_hot)
                         summary, acc = sess.run([merged, self.accuracy], feed_dict={self.x: test_xs, self.y_: test_ys})
