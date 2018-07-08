@@ -38,6 +38,7 @@ def get_loss_fn(fn_name, y_, y):
     # y  is the prediction
     # y_ is the input label
     if fn_name == 'cross_entropy':
+        # y should not be scaled
         return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
 
     if fn_name == 'mean_squared_error':
@@ -53,7 +54,6 @@ def get_loss_fn(fn_name, y_, y):
 
 
 def get_opt_fn(fn_name):
-    # print fn_name
     if fn_name == 'tf.train.GradientDescentOptimizer':
         return tf.train.GradientDescentOptimizer
 
