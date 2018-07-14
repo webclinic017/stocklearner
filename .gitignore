@@ -14,3 +14,5 @@ test_data/mnist/t10k-labels-idx1-ubyte.gz
 test_data/mnist/train-images-idx3-ubyte.gz
 
 test_data/mnist/train-labels-idx1-ubyte.gz
+
+*.pyc

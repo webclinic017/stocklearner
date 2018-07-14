@@ -1,29 +1,5 @@
 import tensorflow as tf
 
-
-# def get_fn(fn_name):
-#     if fn_name == 'tf.nn.relu':
-#         return tf.nn.relu
-#
-#     if fn_name == 'tf.nn.relu6':
-#         return tf.nn.relu6
-#
-#     if fn_name == 'tf.train.GradientDescentOptimizer':
-#         return tf.train.GradientDescentOptimizer
-#
-#     if fn_name == 'tf.train.AdamOptimizer':
-#         return tf.train.AdamOptimizer
-#
-#     if fn_name == 'tf.train.AdagradDAOptimizer':
-#         return tf.train.AdagradDAOptimizer
-#
-#     if fn_name == 'tf.train.AdadeltaOptimizer':
-#         return tf.train.AdadeltaOptimizer
-#
-#     if fn_name == 'tf.train.ProximalAdagradOptimizer':
-#         return tf.train.ProximalAdagradOptimizer
-
-
 def get_act_fn(fn_name):
     if fn_name == 'tf.nn.relu':
         return tf.nn.relu

@@ -1,16 +1,23 @@
 import pandas as pd
+import numpy as np
 import tensorflow as tf
 
-TRAIN_URL = "http://download.tensorflow.org/data/iris_training.csv"
-TEST_URL = "http://download.tensorflow.org/data/iris_test.csv"
+# TRAIN_URL = "http://download.tensorflow.org/data/iris_training.csv"
+# TEST_URL = "http://download.tensorflow.org/data/iris_test.csv"
+
+TRAIN_URL = "~/Desktop/StockLearner/test_data/iris/iris_training.csv"
+TEST_URL = "~/Desktop/StockLearner/test_data/iris/iris_test.csv"
 
 CSV_COLUMN_NAMES = ['SepalLength', 'SepalWidth',
                     'PetalLength', 'PetalWidth', 'Species']
 SPECIES = ['Setosa', 'Versicolor', 'Virginica']
 
 def maybe_download():
-    train_path = tf.keras.utils.get_file(TRAIN_URL.split('/')[-1], TRAIN_URL)
-    test_path = tf.keras.utils.get_file(TEST_URL.split('/')[-1], TEST_URL)
+    # train_path = tf.keras.utils.get_file(TRAIN_URL.split('/')[-1], TRAIN_URL)
+    # test_path = tf.keras.utils.get_file(TEST_URL.split('/')[-1], TEST_URL)
+
+    train_path = TRAIN_URL
+    test_path = TEST_URL
 
     return train_path, test_path
 
@@ -27,19 +34,19 @@ def load_data(y_name='Species'):
     return (train_x, train_y), (test_x, test_y)
 
 
-def train_input_fn(features, labels, batch_size):
+def train_input_fn(features, labels, batch_size=None):
     """An input function for training"""
     # Convert the inputs to a Dataset.
     dataset = tf.data.Dataset.from_tensor_slices((dict(features), labels))
 
     # Shuffle, repeat, and batch the examples.
-    dataset = dataset.shuffle(1000).repeat().batch(batch_size)
+    # dataset = dataset.shuffle(1000).repeat().batch(batch_size)
 
     # Return the dataset.
     return dataset
 
 
-def eval_input_fn(features, labels, batch_size):
+def eval_input_fn(features, labels, batch_size=None):
     """An input function for evaluation or prediction"""
     features=dict(features)
     if labels is None:
@@ -53,7 +60,7 @@ def eval_input_fn(features, labels, batch_size):
 
     # Batch the examples
     assert batch_size is not None, "batch_size must not be None"
-    dataset = dataset.batch(batch_size)
+    # dataset = dataset.batch(batch_size)
 
     # Return the dataset.
     return dataset
@@ -91,3 +98,34 @@ def csv_input_fn(csv_path, batch_size):
 
     # Return the dataset.
     return dataset
+
+if __name__ == "__main__":
+    batch_size = 10
+    (train_x, train_y), (test_x, test_y) = load_data()
+    print (train_x)
+    dataset = train_input_fn(train_x, train_y, batch_size)
+    iterator = dataset.make_one_shot_iterator()
+    # features, label = iterator.get_next()
+
+    sess = tf.InteractiveSession()
+    # print(sess.run([features, label]))
+    f, l = sess.run(iterator.get_next())
+    print(f)
+    print("===========================")
+    sf =[]
+    for i in f:
+        sf.append(f[i])
+    print(sf)
+    print("***************************")
+    # stacked_f = sess.run(tf.stack(unzip(f), axis=1))
+    # stacked_f = np.stack(unzip(f), axis=2)
+    hf = np.stack(sf, axis=1)
+    print(hf)
+    print("---------------------------")
+    print(l)
+
+    a = [1, 2]
+    b = [3, 4]
+    c = [5, 6]
+    d = np.stack([a,b,c], axis=1)
+    print(d)

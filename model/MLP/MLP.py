@@ -1,8 +1,9 @@
 import configparser
 import tensorflow as tf
 import traceback
+import numpy as np
 from util import fn_util
-
+from util import dl_util
 
 class MLP:
     def __init__(self, config_file):
@@ -14,8 +15,10 @@ class MLP:
         self.__init_network()
 
     def __init_hyper_param(self):
+        self.batch_size = self.config.getint('Dataset', 'batch_size')
+        self.repeat = self.config.getint('Dataset', 'repeat_time')
+
         self.learning_rate = self.config.getfloat('Hyper Parameters', 'learning_rate')
-        self.batch_size = self.config.getint('Hyper Parameters', 'batch_size')
         self.echo = self.config.getint('Hyper Parameters', 'echo')
         self.type = self.config.get('Hyper Parameters', 'type')
         self.log_dir = self.config.get('Hyper Parameters', 'log_dir')
@@ -44,6 +47,7 @@ class MLP:
     def __init_network(self):
         self.layers = self.config.sections()
         self.layers.remove('Hyper Parameters')
+        self.layers.remove('Dataset')
 
         for layer in self.layers:
             with tf.name_scope(layer):
@@ -56,11 +60,12 @@ class MLP:
                     n_in = int(self.network.get_shape()[-1])
                     n_units = self.config.getint(layer, 'unit')
                     # W = tf.Variable(tf.truncated_normal([n_in, n_units], stddev=0.1))
-                    W = tf.get_variable("Weight", dtype=tf.float32, initializer=tf.random_normal_initializer(), shape=[n_in, n_units])
-                    self.__var_summaries(W)
-                    # b = tf.Variable(tf.constant(0.1, shape=[n_units]))
-                    b = tf.get_variable("Bias", dtype=tf.float32, initializer=tf.constant_initializer(value=0.1), shape=[n_units])
-                    self.__var_summaries(b)
+                    with tf.variable_scope(layer):
+                        W = tf.get_variable("Weight", dtype=tf.float32, initializer=tf.random_normal_initializer(), shape=[n_in, n_units])
+                        self.__var_summaries(W)
+                        # b = tf.Variable(tf.constant(0.1, shape=[n_units]))
+                        b = tf.get_variable("Bias", dtype=tf.float32, initializer=tf.constant_initializer(value=0.1), shape=[n_units])
+                        self.__var_summaries(b)
                     with tf.name_scope('Wx_plus_b'):
                         preactivate = tf.matmul(self.network, W) + b
                         tf.summary.histogram('pre_activation', preactivate)
@@ -93,6 +98,46 @@ class MLP:
 
         with tf.name_scope('Accuracy'):
             self.accuracy = fn_util.get_acc_fn(self.acc_fn, self.y_, self.network)
+
+    def train_by_dataset(self, dataset):
+        dataset = dataset.batch(self.batch_size)
+        dataset = dataset.repeat(self.repeat)
+        iterator = dataset.make_one_shot_iterator()
+
+        with tf.Session() as sess:
+            merged = tf.summary.merge_all()
+            writer = tf.summary.FileWriter(self.log_dir + "/train", sess.graph)
+            next_xs, next_ys = iterator.get_next()
+            # saver = tf.train.Saver()
+            init = tf.global_variables_initializer()
+            sess.run(init)
+
+            global_steps = 0
+            while global_steps < self.echo:
+                raw_xs, raw_ys = sess.run([next_xs, next_ys])
+                # print(raw_ys)
+                batch_xs = dl_util.dict_to_list(raw_xs)
+                batch_ys = dl_util.one_hot(raw_ys, [0, 1])
+
+                # print(batch_ys)
+
+                run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                run_metadata = tf.RunMetadata()
+                summary, _ , cost = sess.run([merged, self.train_step, self.cost],
+                                      feed_dict={self.x: batch_xs, self.y_: batch_ys},
+                                      options=run_options,
+                                      run_metadata=run_metadata)
+                writer.add_summary(summary, global_steps)
+
+                if global_steps % 50 ==0:
+                    print("Step " + str(global_steps) + ": cost is " + str(cost))
+                    _, acc = sess.run([merged, self.accuracy], feed_dict={self.x: batch_xs, self.y_: batch_ys})
+                    print("Accuracy is: " + str(acc))
+                    # print(crt_prd)
+                global_steps = global_steps + 1
+
+            writer.close()
+
 
     def train(self, data_feed):
         with tf.Session() as sess:
@@ -142,3 +187,15 @@ class MLP:
                 traceback.print_exc()
             train_writer.close()
             test_writer.close()
+
+
+if __name__ == "__main__":
+    from test import iris
+
+    (train_x, train_y), (test_x, test_y) = iris.load_data()
+    # print (train_x)
+    dataset = iris.train_input_fn(train_x, train_y)
+
+    config_file = "/Users/alex/Desktop/StockLearner/config/MLP.classification"
+    mlp = MLP(config_file=config_file)
+    mlp.train_by_dataset(dataset)
