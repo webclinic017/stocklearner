@@ -58,6 +58,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    # tf.app.run()
-
-    print(dl_util.one_hot([-3, -0.7, 1, 5], [-1, 0, 1]))  # <=-1, -1~0, 0~1, >1
+    tf.app.run()

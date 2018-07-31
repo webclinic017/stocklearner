@@ -59,7 +59,7 @@ def eval_input_fn(features, labels, batch_size=None):
     dataset = tf.data.Dataset.from_tensor_slices(inputs)
 
     # Batch the examples
-    assert batch_size is not None, "batch_size must not be None"
+    # assert batch_size is not None, "batch_size must not be None"
     # dataset = dataset.batch(batch_size)
 
     # Return the dataset.

@@ -16,3 +16,13 @@ test_data/mnist/train-images-idx3-ubyte.gz
 test_data/mnist/train-labels-idx1-ubyte.gz
 
 *.pyc
+
+model/MLP/models/iris_baseline/ckp/checkpoint
+
+*.meta
+
+*.index
+
+*.data-00000-of-00001
+
+*.local

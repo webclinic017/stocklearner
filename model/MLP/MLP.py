@@ -1,12 +1,16 @@
+import os
 import configparser
 import tensorflow as tf
-import traceback
-import numpy as np
+# import traceback
+# import hashlib
+# import numpy as np
 from util import fn_util
 from util import dl_util
 
+
 class MLP:
-    def __init__(self, config_file):
+    def __init__(self, config_file, model_name):
+        self.__model_name = model_name
         self.__config_file = config_file
         self.config = configparser.ConfigParser()
         self.config.read(self.__config_file)
@@ -21,16 +25,11 @@ class MLP:
         self.learning_rate = self.config.getfloat('Hyper Parameters', 'learning_rate')
         self.echo = self.config.getint('Hyper Parameters', 'echo')
         self.type = self.config.get('Hyper Parameters', 'type')
-        self.log_dir = self.config.get('Hyper Parameters', 'log_dir')
+        self.log_dir = self.config.get('Hyper Parameters', 'log_dir') + self.__model_name + "/log/"
         self.loss_fn = self.config.get('Hyper Parameters', 'loss_fn')
         self.opt_fn = self.config.get('Hyper Parameters', 'opt_fn')
         self.acc_fn = self.config.get('Hyper Parameters', 'acc_fn')
-        self.model_dir = self.config.get('Hyper Parameters', 'model_dir')
-
-        if self.type == "classification":
-            self.one_hot = True
-        else:
-            self.one_hot = False
+        self.model_dir = self.config.get('Hyper Parameters', 'model_dir') + self.__model_name + "/ckp/"
 
     @staticmethod
     def __var_summaries(var):
@@ -59,11 +58,9 @@ class MLP:
                 else:
                     n_in = int(self.network.get_shape()[-1])
                     n_units = self.config.getint(layer, 'unit')
-                    # W = tf.Variable(tf.truncated_normal([n_in, n_units], stddev=0.1))
                     with tf.variable_scope(layer):
                         W = tf.get_variable("Weight", dtype=tf.float32, initializer=tf.random_normal_initializer(), shape=[n_in, n_units])
                         self.__var_summaries(W)
-                        # b = tf.Variable(tf.constant(0.1, shape=[n_units]))
                         b = tf.get_variable("Bias", dtype=tf.float32, initializer=tf.constant_initializer(value=0.1), shape=[n_units])
                         self.__var_summaries(b)
                     with tf.name_scope('Wx_plus_b'):
@@ -94,108 +91,145 @@ class MLP:
                 tf.summary.scalar(self.loss_fn, self.cost)
         with tf.name_scope('Train_Step'):
             optimizer = fn_util.get_opt_fn(self.opt_fn)
+            # print(self.learning_rate)
             self.train_step = optimizer(self.learning_rate).minimize(self.cost)
 
         with tf.name_scope('Accuracy'):
             self.accuracy = fn_util.get_acc_fn(self.acc_fn, self.y_, self.network)
 
-    def train_by_dataset(self, dataset):
+    def train(self, dataset):
         dataset = dataset.batch(self.batch_size)
         dataset = dataset.repeat(self.repeat)
         iterator = dataset.make_one_shot_iterator()
 
         with tf.Session() as sess:
+            min_cost = 100
             merged = tf.summary.merge_all()
-            writer = tf.summary.FileWriter(self.log_dir + "/train", sess.graph)
+            writer = tf.summary.FileWriter(self.log_dir, sess.graph)
+            saver = tf.train.Saver(max_to_keep=5)
+
             next_xs, next_ys = iterator.get_next()
-            # saver = tf.train.Saver()
+
             init = tf.global_variables_initializer()
             sess.run(init)
 
-            global_steps = 0
-            while global_steps < self.echo:
+            global_step = 0
+            while global_step < self.echo:
                 raw_xs, raw_ys = sess.run([next_xs, next_ys])
-                # print(raw_ys)
                 batch_xs = dl_util.dict_to_list(raw_xs)
                 batch_ys = dl_util.one_hot(raw_ys, [0, 1])
 
-                # print(batch_ys)
-
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
-                summary, _ , cost = sess.run([merged, self.train_step, self.cost],
-                                      feed_dict={self.x: batch_xs, self.y_: batch_ys},
-                                      options=run_options,
-                                      run_metadata=run_metadata)
-                writer.add_summary(summary, global_steps)
+                summary, _, cost = sess.run([merged, self.train_step, self.cost],
+                                            feed_dict={self.x: batch_xs, self.y_: batch_ys},
+                                            options=run_options,
+                                            run_metadata=run_metadata)
+                writer.add_summary(summary, global_step)
 
-                if global_steps % 50 ==0:
-                    print("Step " + str(global_steps) + ": cost is " + str(cost))
+                if min_cost > cost:
+                    saver.save(sess, self.model_dir+ self.__model_name, global_step=global_step)
+                    min_cost = cost
+
+                if global_step % 1000 ==0:
+                    print("Step " + str(global_step) + ": cost is " + str(cost))
                     _, acc = sess.run([merged, self.accuracy], feed_dict={self.x: batch_xs, self.y_: batch_ys})
                     print("Accuracy is: " + str(acc))
-                    # print(crt_prd)
-                global_steps = global_steps + 1
 
+                global_step = global_step + 1
             writer.close()
 
+        # for f in [os.path.join(self.model_dir, i) for i in os.listdir(self.model_dir)]:
+        #     print(f + " " + md5(f))
 
-    def train(self, data_feed):
-        with tf.Session() as sess:
-            # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
-            # sess.add_tensor_filter('has_inf_or_nan', tf_debug.has_inf_or_nan)
+    def eval(self, dataset):
+        if not os.path.exists(self.model_dir):
+            raise ModelNotTrained()
 
-            merged = tf.summary.merge_all()
-            train_writer = tf.summary.FileWriter(self.log_dir + '/train', sess.graph)
-            test_writer = tf.summary.FileWriter(self.log_dir + '/test')
+        if len(os.listdir(self.model_dir)) >0:
+            print("----------------------------------------------------------")
 
-            saver = tf.train.Saver()
+            dataset = dataset.batch(self.batch_size)
+            dataset = dataset.repeat(self.repeat)
+            iterator = dataset.make_one_shot_iterator()
 
-            tf.global_variables_initializer().run()
+            with tf.Session() as sess:
+                next_xs, next_ys = iterator.get_next()
 
-            # for i in range(self.num_epochs):
-            try:
-                i = 0
-                # while True:
-                while i < self.echo:
-                    if i % 10 == 0:
-                        test_xs, test_ys = data_feed.get_test_batch(one_hot=self.one_hot)
-                        summary, acc = sess.run([merged, self.accuracy], feed_dict={self.x: test_xs, self.y_: test_ys})
-                        tf.summary.scalar('accuracy', self.accuracy)
-                        print("After epoch " + str(i) + " current accuracy = " + str(acc))
-                        test_writer.add_summary(summary, i)
-                    else:
-                        batch_xs, batch_ys = data_feed.get_next_train_batch(batch_size=self.batch_size,
-                                                                            one_hot=self.one_hot)
-                        if i % 100 == 99:
-                            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                            run_metadata = tf.RunMetadata()
-                            summary, _ = sess.run([merged, self.train_step],
-                                                  feed_dict={self.x: batch_xs, self.y_: batch_ys},
-                                                  options=run_options,
-                                                  run_metadata=run_metadata)
-                            train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
-                            train_writer.add_summary(summary, i)
+                init = tf.global_variables_initializer()
+                sess.run(init)
 
-                            saver.save(sess, self.model_dir + 'MLP_MODEL_' + self.type + '.ckpt')
-                        else:
-                            summary, _ = sess.run([merged, self.train_step],
-                                                  feed_dict={self.x: batch_xs, self.y_: batch_ys})
-                            train_writer.add_summary(summary, i)
-                    i += 1
-            except Exception as _:
-                print("End of Training")
-                traceback.print_exc()
-            train_writer.close()
-            test_writer.close()
+                saver = tf.train.Saver()
+                # saver = tf.train.import_meta_graph(tf.train.latest_checkpoint(self.model_dir)+".meta")
+                # print(tf.train.latest_checkpoint(self.model_dir))
+                saver.restore(sess, tf.train.latest_checkpoint(self.model_dir))
 
+                raw_xs, raw_ys = sess.run([next_xs, next_ys])
+                batch_xs = dl_util.dict_to_list(raw_xs)
+                batch_ys = dl_util.one_hot(raw_ys, [0, 1])
+
+                acc = sess.run(self.accuracy, feed_dict={self.x: batch_xs, self.y_: batch_ys})
+                print("Accuracy for evaluation is: " + str(acc))
+
+            # for f in [os.path.join(self.model_dir, i) for i in os.listdir(self.model_dir)]:
+            #     print(f + " " + md5(f))
+        else:
+            raise ModelNotTrained()
+
+    def predict(self, batch_x):
+        if not os.path.exists(self.model_dir):
+            raise ModelNotTrained()
+
+        if len(os.listdir(self.model_dir)) >0:
+            print("----------------------------------------------------------")
+
+            with tf.Session() as sess:
+                init = tf.global_variables_initializer()
+                sess.run(init)
+
+                saver = tf.train.Saver()
+                # saver = tf.train.import_meta_graph(tf.train.latest_checkpoint(self.model_dir) + ".meta")
+                saver.restore(sess, tf.train.latest_checkpoint(self.model_dir))
+
+                y = sess.run(self.network, feed_dict={self.x: batch_x})
+                print(y)
+                print(sess.run(tf.argmax(y, 1)))
+
+            # for f in [os.path.join(self.model_dir, i) for i in os.listdir(self.model_dir)]:
+            #     print(f + " " + md5(f))
+
+
+class ModelNotTrained(Exception):
+    def __init__(self):
+        print("Model is not trained yet")
+
+
+# def md5(filename):
+#     hash_md5 = hashlib.md5()
+#     with open(filename, "rb") as f:
+#         for chunk in iter(lambda : f.read(4096), b""):
+#             hash_md5.update(chunk)
+#     return hash_md5.hexdigest()
 
 if __name__ == "__main__":
     from test import iris
 
     (train_x, train_y), (test_x, test_y) = iris.load_data()
-    # print (train_x)
-    dataset = iris.train_input_fn(train_x, train_y)
+    dataset_train = iris.train_input_fn(train_x, train_y)
+    dataset_eval = iris.eval_input_fn(test_x, test_y)
 
-    config_file = "/Users/alex/Desktop/StockLearner/config/MLP.classification"
-    mlp = MLP(config_file=config_file)
-    mlp.train_by_dataset(dataset)
+    config_file = "/Users/alex/Desktop/StockLearner/config/iris_mlp_baseline.cls"
+    mlp = MLP(config_file=config_file, model_name="iris_baseline")
+    mlp.train_by_dataset(dataset_train)
+    mlp.eval_by_dataset(dataset_eval)
+
+    import numpy as np
+    predict_data = np.array([
+        [5.9,3.0,4.2,1.5]  # 1
+        ,[6.9,3.1,5.4,2.1] # 2
+        ,[5.1,3.3,1.7,0.5] # 0
+        ,[6.0,3.4,4.5,1.6] # 1
+        ,[5.5,2.5,4.0,1.3] # 1
+        ,[6.2,2.9,4.3,1.3] # 1
+    ])
+    mlp.predict(predict_data)
