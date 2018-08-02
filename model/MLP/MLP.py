@@ -59,9 +59,15 @@ class MLP:
                     n_in = int(self.network.get_shape()[-1])
                     n_units = self.config.getint(layer, 'unit')
                     with tf.variable_scope(layer):
-                        W = tf.get_variable("Weight", dtype=tf.float32, initializer=tf.random_normal_initializer(), shape=[n_in, n_units])
+                        W = tf.get_variable("Weight",
+                                            dtype=tf.float32,
+                                            initializer=tf.random_normal_initializer(),
+                                            shape=[n_in, n_units])
                         self.__var_summaries(W)
-                        b = tf.get_variable("Bias", dtype=tf.float32, initializer=tf.constant_initializer(value=0.1), shape=[n_units])
+                        b = tf.get_variable("Bias",
+                                            dtype=tf.float32,
+                                            initializer=tf.constant_initializer(value=0.1),
+                                            shape=[n_units])
                         self.__var_summaries(b)
                     with tf.name_scope('Wx_plus_b'):
                         preactivate = tf.matmul(self.network, W) + b
@@ -82,7 +88,7 @@ class MLP:
                                 self.network = tf.nn.dropout(self.network, keep_prob=keep_prob)
                                 tf.summary.scalar('dropout', keep_prob)
                                 print("Keep prob =>" + str(keep_prob))
-                        except Exception as ex:
+                        except Exception as _:
                             pass
 
         with tf.name_scope('Loss'):
@@ -128,10 +134,10 @@ class MLP:
                 writer.add_summary(summary, global_step)
 
                 if min_cost > cost:
-                    saver.save(sess, self.model_dir+ self.__model_name, global_step=global_step)
+                    saver.save(sess, self.model_dir + self.__model_name, global_step=global_step)
                     min_cost = cost
 
-                if global_step % 1000 ==0:
+                if global_step % 1000 == 0:
                     print("Step " + str(global_step) + ": cost is " + str(cost))
                     _, acc = sess.run([merged, self.accuracy], feed_dict={self.x: batch_xs, self.y_: batch_ys})
                     print("Accuracy is: " + str(acc))
@@ -146,7 +152,7 @@ class MLP:
         if not os.path.exists(self.model_dir):
             raise ModelNotTrained()
 
-        if len(os.listdir(self.model_dir)) >0:
+        if len(os.listdir(self.model_dir)) > 0:
             print("----------------------------------------------------------")
 
             dataset = dataset.batch(self.batch_size)
@@ -180,7 +186,7 @@ class MLP:
         if not os.path.exists(self.model_dir):
             raise ModelNotTrained()
 
-        if len(os.listdir(self.model_dir)) >0:
+        if len(os.listdir(self.model_dir)) > 0:
             print("----------------------------------------------------------")
 
             with tf.Session() as sess:
@@ -218,8 +224,8 @@ if __name__ == "__main__":
     dataset_train = iris.train_input_fn(train_x, train_y)
     dataset_eval = iris.eval_input_fn(test_x, test_y)
 
-    config_file = "/Users/alex/Desktop/StockLearner/config/iris_mlp_baseline.cls"
-    mlp = MLP(config_file=config_file, model_name="iris_baseline")
+    my_config_file = "/Users/alex/Desktop/StockLearner/config/iris_mlp_baseline.cls"
+    mlp = MLP(config_file=my_config_file, model_name="iris_baseline")
     mlp.train_by_dataset(dataset_train)
     mlp.eval_by_dataset(dataset_eval)
 
