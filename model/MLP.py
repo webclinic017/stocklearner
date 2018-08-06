@@ -1,4 +1,5 @@
 import os
+import datetime
 import configparser
 import tensorflow as tf
 # import traceback
@@ -110,7 +111,14 @@ class MLP:
         dataset = dataset.repeat(self.repeat)
         iterator = dataset.make_one_shot_iterator()
 
-        with tf.Session() as sess:
+        # 2018/08/06 - To fully utilize CPUs for training
+        config = tf.ConfigProto(device_count={"CPU": 8},
+                                inter_op_parallelism_threads=16,
+                                intra_op_parallelism_threads=16,
+                                log_device_placement=True
+                                )
+
+        with tf.Session(config=config) as sess:
             min_cost = 100
             best_accuracy = 0
             merged = tf.summary.merge_all()
@@ -131,9 +139,9 @@ class MLP:
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
                 summary, _, cost, accuracy = sess.run([merged, self.train_step, self.cost, self.accuracy],
-                                            feed_dict={self.x: batch_xs, self.y_: batch_ys},
-                                            options=run_options,
-                                            run_metadata=run_metadata)
+                                                      feed_dict={self.x: batch_xs, self.y_: batch_ys},
+                                                      options=run_options,
+                                                      run_metadata=run_metadata)
                 writer.add_summary(summary, global_step)
 
                 if min_cost > cost:
@@ -143,7 +151,8 @@ class MLP:
                 if best_accuracy <= accuracy:
                     best_accuracy = accuracy
 
-                if global_step % 1000 == 0:
+                if global_step % 100 == 0:
+                    print (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                     print("Step " + str(global_step) + ": cost is " + str(cost))
                     _, acc = sess.run([merged, self.accuracy], feed_dict={self.x: batch_xs, self.y_: batch_ys})
                     print("Accuracy is: " + str(acc))

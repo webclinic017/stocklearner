@@ -36,3 +36,5 @@ model/mlp/stock_baseline/ckp/checkpoint
 models/stock_baseline/ckp/checkpoint
 
 models/stock_baseline/ckp/checkpoint
+*.DESKTOP-IJBTUUF
+.idea/modules.xml
