@@ -3,6 +3,7 @@ import random
 from sklearn.model_selection import train_test_split
 
 
+@DeprecationWarning
 class CSVDataFeed:
     def __init__(self, filenames):
         self.filenames = filenames

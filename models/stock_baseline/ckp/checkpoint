@@ -1,0 +1,6 @@
+model_checkpoint_path: "stock_baseline-49951"
+all_model_checkpoint_paths: "stock_baseline-49006"
+all_model_checkpoint_paths: "stock_baseline-49195"
+all_model_checkpoint_paths: "stock_baseline-49438"
+all_model_checkpoint_paths: "stock_baseline-49519"
+all_model_checkpoint_paths: "stock_baseline-49951"

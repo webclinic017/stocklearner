@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def one_hot(source_slide, boundaries, on_value=1, off_value=0):
+def one_hot(source_slide, boundaries=[-7, -5, -3, 0, 3, 5, 7], on_value=1, off_value=0):
     # print(source_slide)
     def _one_hot(_source_value):
         # print(_source_value)

@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 def get_act_fn(fn_name):
     if fn_name == 'tf.nn.relu':
         return tf.nn.relu

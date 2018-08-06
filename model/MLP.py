@@ -7,6 +7,8 @@ import tensorflow as tf
 from util import fn_util
 from util import dl_util
 
+IRIS_BOUNDARIES = [0, 1]
+
 
 class MLP:
     def __init__(self, config_file, model_name):
@@ -123,7 +125,7 @@ class MLP:
             while global_step < self.echo:
                 raw_xs, raw_ys = sess.run([next_xs, next_ys])
                 batch_xs = dl_util.dict_to_list(raw_xs)
-                batch_ys = dl_util.one_hot(raw_ys, [0, 1])
+                batch_ys = dl_util.one_hot(raw_ys)
 
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
@@ -217,25 +219,25 @@ class ModelNotTrained(Exception):
 #             hash_md5.update(chunk)
 #     return hash_md5.hexdigest()
 
-if __name__ == "__main__":
-    from test import iris
-
-    (train_x, train_y), (test_x, test_y) = iris.load_data()
-    dataset_train = iris.train_input_fn(train_x, train_y)
-    dataset_eval = iris.eval_input_fn(test_x, test_y)
-
-    my_config_file = "/Users/alex/Desktop/StockLearner/config/iris_mlp_baseline.cls"
-    mlp = MLP(config_file=my_config_file, model_name="iris_baseline")
-    mlp.train_by_dataset(dataset_train)
-    mlp.eval_by_dataset(dataset_eval)
-
-    import numpy as np
-    predict_data = np.array([
-        [5.9,3.0,4.2,1.5]  # 1
-        ,[6.9,3.1,5.4,2.1] # 2
-        ,[5.1,3.3,1.7,0.5] # 0
-        ,[6.0,3.4,4.5,1.6] # 1
-        ,[5.5,2.5,4.0,1.3] # 1
-        ,[6.2,2.9,4.3,1.3] # 1
-    ])
-    mlp.predict(predict_data)
+# if __name__ == "__main__":
+#     from test import iris
+#
+#     (train_x, train_y), (test_x, test_y) = iris.load_data()
+#     dataset_train = iris.train_input_fn(train_x, train_y)
+#     dataset_eval = iris.eval_input_fn(test_x, test_y)
+#
+#     my_config_file = "/Users/alex/Desktop/StockLearner/config/iris_mlp_baseline.cls"
+#     mlp = MLP(config_file=my_config_file, model_name="iris_baseline")
+#     mlp.train_by_dataset(dataset_train)
+#     mlp.eval_by_dataset(dataset_eval)
+#
+#     import numpy as np
+#     predict_data = np.array([
+#         [5.9,3.0,4.2,1.5]  # 1
+#         ,[6.9,3.1,5.4,2.1] # 2
+#         ,[5.1,3.3,1.7,0.5] # 0
+#         ,[6.0,3.4,4.5,1.6] # 1
+#         ,[5.5,2.5,4.0,1.3] # 1
+#         ,[6.2,2.9,4.3,1.3] # 1
+#     ])
+#     mlp.predict(predict_data)

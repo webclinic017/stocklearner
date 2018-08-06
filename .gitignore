@@ -26,3 +26,5 @@ model/MLP/models/iris_baseline/ckp/checkpoint
 *.data-00000-of-00001
 
 *.local
+
+.idea/dictionaries/alex.xml
