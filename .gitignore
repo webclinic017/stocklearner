@@ -38,3 +38,4 @@ models/stock_baseline/ckp/checkpoint
 models/stock_baseline/ckp/checkpoint
 *.DESKTOP-IJBTUUF
 .idea/modules.xml
+.idea/dictionaries/Fan.xml
