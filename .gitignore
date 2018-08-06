@@ -28,3 +28,11 @@ model/MLP/models/iris_baseline/ckp/checkpoint
 *.local
 
 .idea/dictionaries/alex.xml
+
+models/stock_baseline/ckp/checkpoint
+
+model/mlp/stock_baseline/ckp/checkpoint
+
+models/stock_baseline/ckp/checkpoint
+
+models/stock_baseline/ckp/checkpoint

@@ -112,6 +112,7 @@ class MLP:
 
         with tf.Session() as sess:
             min_cost = 100
+            best_accuracy = 0
             merged = tf.summary.merge_all()
             writer = tf.summary.FileWriter(self.log_dir, sess.graph)
             saver = tf.train.Saver(max_to_keep=5)
@@ -129,7 +130,7 @@ class MLP:
 
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
-                summary, _, cost = sess.run([merged, self.train_step, self.cost],
+                summary, _, cost, accuracy = sess.run([merged, self.train_step, self.cost, self.accuracy],
                                             feed_dict={self.x: batch_xs, self.y_: batch_ys},
                                             options=run_options,
                                             run_metadata=run_metadata)
@@ -139,6 +140,9 @@ class MLP:
                     saver.save(sess, self.model_dir + self.__model_name, global_step=global_step)
                     min_cost = cost
 
+                if best_accuracy <= accuracy:
+                    best_accuracy = accuracy
+
                 if global_step % 1000 == 0:
                     print("Step " + str(global_step) + ": cost is " + str(cost))
                     _, acc = sess.run([merged, self.accuracy], feed_dict={self.x: batch_xs, self.y_: batch_ys})
@@ -146,6 +150,9 @@ class MLP:
 
                 global_step = global_step + 1
             writer.close()
+
+            print("----------------------------------------------------------")
+            print("Best Accuracy is: " + str(best_accuracy))
 
         # for f in [os.path.join(self.model_dir, i) for i in os.listdir(self.model_dir)]:
         #     print(f + " " + md5(f))
