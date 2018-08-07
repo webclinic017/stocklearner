@@ -152,7 +152,8 @@ class MLP:
                 if best_accuracy <= accuracy:
                     best_accuracy = accuracy
 
-                avg_accuracy = avg_accuracy + accuracy
+                if global_step > 10000:
+                    avg_accuracy = avg_accuracy + accuracy
 
                 if global_step % 100 == 0:
                     print (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -165,7 +166,7 @@ class MLP:
 
             print("----------------------------------------------------------")
             print("Best Accuracy is: " + str(best_accuracy))
-            print("Average Accuracy is: " + str(round(avg_accuracy / self.echo, 2)))
+            print("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
 
         # for f in [os.path.join(self.model_dir, i) for i in os.listdir(self.model_dir)]:
         #     print(f + " " + md5(f))
