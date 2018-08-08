@@ -46,7 +46,7 @@ class RNN:
 
             cells = dl_util.get_rnn_cells(cell_type, hidden_cells, forget_bias)
             self.network = tf.contrib.rnn.static_rnn(cells, self.network, dtype=tf.float32)
-            print("Building Static RNN")
+            print("Using Static RNN")
 
         with tf.name_scope("Output"):
             output_size = self.config.getint('Output', 'unit')
