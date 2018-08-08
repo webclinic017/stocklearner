@@ -100,7 +100,6 @@ class MLP:
                 tf.summary.scalar(self.loss_fn, self.cost)
         with tf.name_scope('Train_Step'):
             optimizer = fn_util.get_opt_fn(self.opt_fn)
-            # print(self.learning_rate)
             self.train_step = optimizer(self.learning_rate).minimize(self.cost)
 
         with tf.name_scope('Accuracy'):

@@ -16,7 +16,9 @@ def get_loss_fn(fn_name, y_, y):
     # y_ is the input label
     if fn_name == 'cross_entropy':
         # y should not be scaled
-        return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
+        # Deprecated in future version
+        # return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
+        return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=y))
 
     if fn_name == 'mean_squared_error':
         return tf.losses.mean_squared_error(y_, y)

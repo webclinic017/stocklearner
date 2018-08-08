@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 
 def one_hot(source_slide, boundaries=[-7, -5, -3, 0, 3, 5, 7], on_value=1, off_value=0):
@@ -29,3 +30,21 @@ def dict_to_list(dict):
     for i in dict:
         list.append(dict[i])
     return np.stack(list, axis=1)
+
+
+def get_rnn_cells(cell_type, hidden_cells, forget_bias=1.0):
+    if cell_type == "LSTM":
+        return tf.contrib.rnn.LSTMCell(hidden_cells, forget_bias=forget_bias)
+
+    if cell_type == "GRU":
+        return tf.contrib.rnn.GRUCell(hidden_cells)
+
+    if cell_type == "BasicLSTM":
+        return tf.contrib.rnn.BasicLSTMCell(hidden_cells, forget_bias=forget_bias)
+
+    raise CellTypeNotFoundException()
+
+
+class CellTypeNotFoundException(Exception):
+    def __init__(self):
+        print("Function is not found")
