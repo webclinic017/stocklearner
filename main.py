@@ -19,11 +19,12 @@ def main(argv):
     model_config_path = config.get("Model", "model_config_file")
 
     dataset_train = stock.csv_input_fn(training_data_path)
-    # dataset_eval = stock.csv_input_fn()
+    dataset_eval = stock.csv_input_fn(eval_data_path)
 
     try:
         model = model_util.get_model(model_type, model_config_path, model_name)
-        model.train(dataset_train)
+        # model.train(dataset_train)
+        model.eval(dataset_eval)
     except Exception as ex:
         print(ex)
 

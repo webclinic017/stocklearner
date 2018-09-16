@@ -194,7 +194,7 @@ class MLP:
 
                 raw_xs, raw_ys = sess.run([next_xs, next_ys])
                 batch_xs = dl_util.dict_to_list(raw_xs)
-                batch_ys = dl_util.one_hot(raw_ys, [0, 1])
+                batch_ys = dl_util.one_hot(raw_ys)
 
                 acc = sess.run(self.accuracy, feed_dict={self.x: batch_xs, self.y_: batch_ys})
                 print("Accuracy for evaluation is: " + str(acc))
