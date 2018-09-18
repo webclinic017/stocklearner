@@ -31,6 +31,10 @@ def dict_to_list(dict):
         list.append(dict[i])
     return np.stack(list, axis=1)
 
+def rnn_output_split(list, time_steps, output_size):
+    reshaped_narray = np.array(list).reshape(-1, time_steps, output_size)
+    hsplited_narray = np.array(np.hsplit(reshaped_narray, time_steps)[-1])
+    return hsplited_narray.reshape(-1, output_size)
 
 def get_rnn_cells(cell_type, hidden_cells, forget_bias=1.0):
     if cell_type == "LSTM":

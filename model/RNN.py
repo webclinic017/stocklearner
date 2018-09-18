@@ -3,7 +3,9 @@ import datetime
 import tensorflow as tf
 from util import fn_util
 from util import dl_util
+import numpy as np
 
+MNIST_BOUNDARIES = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
 class RNN:
     def __init__(self, config_file, model_name):
@@ -66,20 +68,29 @@ class RNN:
         else:
             cell = stacked_rnn[0]
             print("This is a Single RNN Layer")
+
         self.network, self.states = tf.contrib.rnn.static_rnn(cell, self.network, dtype=tf.float32)
         print("Using Static RNN")
 
         with tf.name_scope("Output"):
-            output_size = self.config.getint("Output", "unit")
-            self.y_ = tf.placeholder("float", [None, output_size])
+            # print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+            self.output_size = self.config.getint("Output", "unit")
+            self.y_ = tf.placeholder("float", [None, self.output_size])
             act = fn_util.get_act_fn(self.config.get("Output", "act_fn"))
-            self.network = tf.contrib.layers.fully_connected(self.network[-1], output_size, activation_fn=act)
-            print("Building Output Layer:Output Size =>" + str(output_size))
+            # print(len(self.network))
+            self.network = tf.contrib.layers.fully_connected(self.network[-1], self.output_size, activation_fn=act)
+            # print(self.network.shape)
+            print("Building Output Layer:Output Size =>" + str(self.output_size))
+            # print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
         with tf.name_scope("Loss"):
+            # print("========================================================")
             with tf.name_scope(self.loss_fn):
+                # print(self.y_.shape)
+                # print(self.network.shape)
                 self.cost = fn_util.get_loss_fn(self.loss_fn, self.y_, self.network)
                 tf.summary.scalar(self.loss_fn, self.cost)
+            # print("========================================================")
         with tf.name_scope("Train_Step"):
             optimizer = fn_util.get_opt_fn(self.opt_fn)
             self.train_step = optimizer(self.learning_rate).minimize(self.cost)
@@ -88,7 +99,9 @@ class RNN:
             self.accuracy = fn_util.get_acc_fn(self.acc_fn, self.y_, self.network)
 
     def train(self, dataset):
-        dataset = dataset.batch(self.batch_size)
+        # dataset = dataset.batch(self.batch_size * self.time_steps)
+        dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.time_steps * self.batch_size))
+        # dataset = dataset.batch(self.batch_size * self.time_steps, drop_remainder= True) # available in tf 1.10
         dataset = dataset.repeat(self.repeat)
         iterator = dataset.make_one_shot_iterator()
 
@@ -100,6 +113,7 @@ class RNN:
                                 )
 
         with tf.Session(config=config) as sess:
+        # with tf.Session() as sess:
             min_cost = 100
             best_accuracy = 0
             avg_accuracy = 0
@@ -117,11 +131,22 @@ class RNN:
                 raw_xs, raw_ys = sess.run([next_xs, next_ys])
                 # print(raw_xs)
                 # print(raw_ys)
-                batch_xs = raw_xs # No need to use dict_to_list because MNIST is ndarry
+                # batch_xs = raw_xs # No need to use dict_to_list because MNIST is ndarry
+                batch_xs = dl_util.dict_to_list(raw_xs)
+                # print("batch xs shape:")
+                # [batch, all pixels]
+                # print(batch_xs.shape)
+                # print(batch_xs)
                 batch_xs = batch_xs.reshape((-1, self.time_steps, self.input_size))
-                batch_ys = dl_util.one_hot(raw_ys, boundaries=[0, 1, 2, 3, 4, 5, 6, 7, 8])
-                #print(batch_xs)
-                #print(batch_ys)
+                # [batch, time_steps, input_size]
+                # print(batch_xs.shape)
+                # print("Reshaped batch xs:")
+                # print(batch_xs.shape)
+                # batch_ys = dl_util.one_hot(raw_ys, boundaries=MNIST_BOUNDARIES)
+                batch_ys = dl_util.one_hot(raw_ys)
+                batch_ys = dl_util.rnn_output_split(batch_ys, self.time_steps, self.output_size)
+                # print("batch ys shape:")
+                # print(batch_ys.shape)
 
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
@@ -173,3 +198,4 @@ if __name__ == "__main__":
     from test import mnist
     train_dataset = mnist.train(mnist.MNIST_LOCAL_DIR)
     rnn.train(train_dataset)
+    pass
