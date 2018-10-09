@@ -17,8 +17,6 @@ test_data/mnist/train-labels-idx1-ubyte.gz
 
 *.pyc
 
-model/MLP/models/iris_baseline/ckp/checkpoint
-
 *.meta
 
 *.index
@@ -29,18 +27,17 @@ model/MLP/models/iris_baseline/ckp/checkpoint
 
 .idea/dictionaries/alex.xml
 
-models/stock_baseline/ckp/checkpoint
-
-model/mlp/stock_baseline/ckp/checkpoint
-
-models/stock_baseline/ckp/checkpoint
-
-models/stock_baseline/ckp/checkpoint
 *.DESKTOP-IJBTUUF
+
 .idea/modules.xml
+
 .idea/dictionaries/Fan.xml
+
 test_data/mnist/t10k-images-idx3-ubyte
+
 test_data/mnist/t10k-labels-idx1-ubyte
+
 test_data/mnist/train-images-idx3-ubyte
+
 test_data/mnist/train-labels-idx1-ubyte
-model/rnn/mnist_baseline/ckp/checkpoint
+

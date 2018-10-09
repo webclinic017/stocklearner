@@ -1,13 +1,20 @@
 from model import MLP
 from model import RNN
+import configparser
 
-def get_model(model_type, model_config_path, model_name):
+# def get_model(model_type, model_config_path, model_name):
+def get_model(model_config_path):
+    config = configparser.ConfigParser()
+    config.read(model_config_path)
+    model_type = config.get("Model", "type")
+    print(model_type)
+
     if model_type == "MLP":
-        model = MLP.MLP(config_file=model_config_path, model_name=model_name)
+        model = MLP.MLP(config_file=model_config_path)
         return model
 
     if model_type == "RNN":
-        model = RNN.RNN(config_file=model_config_path, model_name=model_name)
+        model = RNN.RNN(config_file=model_config_path)
         return model
     raise ModelTypeNotFound()
 

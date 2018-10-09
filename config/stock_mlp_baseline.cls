@@ -1,3 +1,7 @@
+[Model]
+name = stock_mpl_baseline
+type = MLP
+
 [Input]
 unit = 8
 

@@ -1,3 +1,7 @@
+[Model]
+name = stock_rnn_baseline
+type = RNN
+
 [Input]
 unit = 8
 time_steps = 10

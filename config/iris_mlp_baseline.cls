@@ -1,3 +1,7 @@
+[Model]
+name = iris_mpl_baseline
+type = MLP
+
 [Input]
 unit = 4
 

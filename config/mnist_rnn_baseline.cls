@@ -1,3 +1,7 @@
+[Model]
+name = mnist_rnn_baseline
+type = RNN
+
 [Input]
 unit = 28
 time_steps = 28

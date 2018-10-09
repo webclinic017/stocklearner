@@ -12,55 +12,56 @@ IRIS_BOUNDARIES = [0, 1]
 
 
 class MLP:
-    def __init__(self, config_file, model_name):
-        self.__model_name = model_name
-        self.__config_file = config_file
+    def __init__(self, config_file):
+        self.config_file = config_file
         self.config = configparser.ConfigParser()
-        self.config.read(self.__config_file)
+        self.config.read(self.config_file)
 
         self.__init_hyper_param()
         self.__init_network()
 
     def __init_hyper_param(self):
-        self.batch_size = self.config.getint('Dataset', 'batch_size')
-        self.repeat = self.config.getint('Dataset', 'repeat_time')
+        self.model_name = self.config.get("Model", "name")
+        self.batch_size = self.config.getint("Dataset", "batch_size")
+        self.repeat = self.config.getint("Dataset", "repeat_time")
 
-        self.learning_rate = self.config.getfloat('Hyper Parameters', 'learning_rate')
-        self.echo = self.config.getint('Hyper Parameters', 'echo')
-        self.type = self.config.get('Hyper Parameters', 'type')
-        self.log_dir = self.config.get('Hyper Parameters', 'log_dir') + self.__model_name + "/log/"
-        self.loss_fn = self.config.get('Hyper Parameters', 'loss_fn')
-        self.opt_fn = self.config.get('Hyper Parameters', 'opt_fn')
-        self.acc_fn = self.config.get('Hyper Parameters', 'acc_fn')
-        self.model_dir = self.config.get('Hyper Parameters', 'model_dir') + self.__model_name + "/ckp/"
+        self.learning_rate = self.config.getfloat("Hyper Parameters", "learning_rate")
+        self.echo = self.config.getint("Hyper Parameters", "echo")
+        self.type = self.config.get("Hyper Parameters", "type")
+        self.log_dir = self.config.get("Hyper Parameters", "log_dir") + self.model_name + "/log/"
+        self.loss_fn = self.config.get("Hyper Parameters", "loss_fn")
+        self.opt_fn = self.config.get("Hyper Parameters", "opt_fn")
+        self.acc_fn = self.config.get("Hyper Parameters", "acc_fn")
+        self.model_dir = self.config.get("Hyper Parameters", "model_dir") + self.model_name + "/ckp/"
 
     @staticmethod
     def __var_summaries(var):
-        with tf.name_scope('Summaries'):
+        with tf.name_scope("Summaries"):
             mean = tf.reduce_mean(var)
-            tf.summary.scalar('mean', mean)
-            with tf.name_scope('stddev'):
+            tf.summary.scalar("mean", mean)
+            with tf.name_scope("stddev"):
                 stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-            tf.summary.scalar('stddev', stddev)
-            tf.summary.scalar('max', tf.reduce_max(var))
-            tf.summary.scalar('min', tf.reduce_min(var))
-            tf.summary.histogram('histogram', var)
+            tf.summary.scalar("stddev", stddev)
+            tf.summary.scalar("max", tf.reduce_max(var))
+            tf.summary.scalar("min", tf.reduce_min(var))
+            tf.summary.histogram("histogram", var)
 
     def __init_network(self):
         self.layers = self.config.sections()
-        self.layers.remove('Hyper Parameters')
-        self.layers.remove('Dataset')
+        self.layers.remove("Model")
+        self.layers.remove("Hyper Parameters")
+        self.layers.remove("Dataset")
 
         for layer in self.layers:
             with tf.name_scope(layer):
-                if layer == 'Input':
-                    input_size = self.config.getint(layer, 'unit')
+                if layer == "Input":
+                    input_size = self.config.getint(layer, "unit")
                     self.x = tf.placeholder(dtype=tf.float32, shape=[None, input_size], name=layer)
                     self.network = self.x
                     print("Building Input layer:Input Size =>" + str(input_size))
                 else:
                     n_in = int(self.network.get_shape()[-1])
-                    n_units = self.config.getint(layer, 'unit')
+                    n_units = self.config.getint(layer, "unit")
                     with tf.variable_scope(layer):
                         W = tf.get_variable("Weight",
                                             dtype=tf.float32,
@@ -72,37 +73,37 @@ class MLP:
                                             initializer=tf.constant_initializer(value=0.1),
                                             shape=[n_units])
                         self.__var_summaries(b)
-                    with tf.name_scope('Wx_plus_b'):
+                    with tf.name_scope("Wx_plus_b"):
                         preactivate = tf.matmul(self.network, W) + b
-                        tf.summary.histogram('pre_activation', preactivate)
-                    if layer == 'Output':
+                        tf.summary.histogram("pre_activation", preactivate)
+                    if layer == "Output":
                         self.y_ = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=layer)
                         self.network = preactivate
                         print("Building Output layer:Output Size =>[" + str(n_in) + ", " + str(n_units) + "]")
                     else:
-                        act = fn_util.get_act_fn(self.config.get(layer, 'act_fn'))
+                        act = fn_util.get_act_fn(self.config.get(layer, "act_fn"))
                         self.network = act(preactivate)
-                        tf.summary.histogram('activation', self.network)
+                        tf.summary.histogram("activation", self.network)
                         print("Building hidden layers:Name =>" + layer + " Size =>[" + str(n_in) + ", " + str(n_units) + "]")
-                        print("Activation Function =>" + self.config.get(layer, 'act_fn'))
+                        print("Activation Function =>" + self.config.get(layer, "act_fn"))
                         try:
-                            with tf.name_scope('dropout'):
-                                keep_prob = self.config.getfloat(layer, 'keep_prob')
+                            with tf.name_scope("dropout"):
+                                keep_prob = self.config.getfloat(layer, "keep_prob")
                                 self.network = tf.nn.dropout(self.network, keep_prob=keep_prob)
-                                tf.summary.scalar('dropout', keep_prob)
+                                tf.summary.scalar("dropout", keep_prob)
                                 print("Keep prob =>" + str(keep_prob))
                         except Exception as _:
                             pass
 
-        with tf.name_scope('Loss'):
+        with tf.name_scope("Loss"):
             with tf.name_scope(self.loss_fn):
                 self.cost = fn_util.get_loss_fn(self.loss_fn, self.y_, self.network)
                 tf.summary.scalar(self.loss_fn, self.cost)
-        with tf.name_scope('Train_Step'):
+        with tf.name_scope("Train_Step"):
             optimizer = fn_util.get_opt_fn(self.opt_fn)
             self.train_step = optimizer(self.learning_rate).minimize(self.cost)
 
-        with tf.name_scope('Accuracy'):
+        with tf.name_scope("Accuracy"):
             self.accuracy = fn_util.get_acc_fn(self.acc_fn, self.y_, self.network)
 
     def train(self, dataset):
@@ -145,7 +146,7 @@ class MLP:
                 writer.add_summary(summary, global_step)
 
                 if min_cost > cost:
-                    saver.save(sess, self.model_dir + self.__model_name, global_step=global_step)
+                    saver.save(sess, self.model_dir + self.model_name, global_step=global_step)
                     min_cost = cost
 
                 if best_accuracy <= accuracy:
@@ -155,7 +156,7 @@ class MLP:
                     avg_accuracy = avg_accuracy + accuracy
 
                 if global_step % 100 == 0:
-                    print (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                    print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                     print("Step " + str(global_step) + ": cost is " + str(cost))
                     _, acc = sess.run([merged, self.accuracy], feed_dict={self.x: batch_xs, self.y_: batch_ys})
                     print("Accuracy is: " + str(acc))

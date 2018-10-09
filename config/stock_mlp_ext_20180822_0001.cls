@@ -1,3 +1,7 @@
+[Model]
+name = stock_mlp_ext_20180822_0001
+type = MLP
+
 [Input]
 unit = 8
 
