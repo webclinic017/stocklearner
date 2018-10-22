@@ -1,5 +1,6 @@
 import numpy as np
 
+'''
 OUTPUT_SIZE = 2
 TIME_STEPS = 2
 
@@ -25,3 +26,20 @@ def transform_rnn_output(list, time_steps, output_size):
 lst = [[1,1], [2,2], [3,3], [4,4], [5,5], [6,6], [7,7], [8,8], [9,9]]
 ary = a(lst, 3, 2)
 print(ary)
+'''
+
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
+
+handler = logging.FileHandler("test_log.txt")
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+logger.info("Start print log")
+logger.debug("Do something")
+logger.warning("Something maybe fail.")
+logger.info("Finish")

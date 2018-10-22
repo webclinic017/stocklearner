@@ -7,6 +7,7 @@ import tensorflow as tf
 # import numpy as np
 from util import fn_util
 from util import dl_util
+from util import log_util
 
 IRIS_BOUNDARIES = [0, 1]
 
@@ -33,6 +34,9 @@ class MLP:
         self.opt_fn = self.config.get("Hyper Parameters", "opt_fn")
         self.acc_fn = self.config.get("Hyper Parameters", "acc_fn")
         self.model_dir = self.config.get("Hyper Parameters", "model_dir") + self.model_name + "/ckp/"
+        self.tensorboard_summary_enabled = self.config.get("Hyper Parameters", "enable_tensorboard_log")
+
+        self.logger = log_util.get_file_logger(self.model_name, self.log_dir + self.model_name + ".txt")
 
     @staticmethod
     def __var_summaries(var):
@@ -123,8 +127,10 @@ class MLP:
             best_accuracy = 0
             avg_accuracy = 0
             merged = tf.summary.merge_all()
-            writer = tf.summary.FileWriter(self.log_dir, sess.graph)
             saver = tf.train.Saver(max_to_keep=5)
+
+            if self.tensorboard_summary_enabled:
+                writer = tf.summary.FileWriter(self.log_dir, sess.graph)
 
             next_xs, next_ys = iterator.get_next()
 
@@ -143,7 +149,9 @@ class MLP:
                                                       feed_dict={self.x: batch_xs, self.y_: batch_ys},
                                                       options=run_options,
                                                       run_metadata=run_metadata)
-                writer.add_summary(summary, global_step)
+
+                if self.tensorboard_summary_enabled:
+                    writer.add_summary(summary, global_step)
 
                 if min_cost > cost:
                     saver.save(sess, self.model_dir + self.model_name, global_step=global_step)
@@ -156,18 +164,22 @@ class MLP:
                     avg_accuracy = avg_accuracy + accuracy
 
                 if global_step % 100 == 0:
-                    print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                     print("Step " + str(global_step) + ": cost is " + str(cost))
+                    self.logger.info("Step " + str(global_step) + ": cost is " + str(cost))
                     _, acc = sess.run([merged, self.accuracy], feed_dict={self.x: batch_xs, self.y_: batch_ys})
                     print("Accuracy is: " + str(acc))
-
+                    self.logger.info("Accuracy is: " + str(acc))
                 global_step = global_step + 1
-            writer.close()
+
+            if self.tensorboard_summary_enabled:
+                writer.close()
 
             print("----------------------------------------------------------")
             print("Best Accuracy is: " + str(best_accuracy))
+            self.logger.info("Best Accuracy is: " + str(best_accuracy))
             print("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
-
+            self.logger.info("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
         # for f in [os.path.join(self.model_dir, i) for i in os.listdir(self.model_dir)]:
         #     print(f + " " + md5(f))
 
@@ -210,8 +222,6 @@ class MLP:
             raise ModelNotTrained()
 
         if len(os.listdir(self.model_dir)) > 0:
-            print("----------------------------------------------------------")
-
             with tf.Session() as sess:
                 init = tf.global_variables_initializer()
                 sess.run(init)

@@ -21,8 +21,6 @@ test_data/mnist/train-labels-idx1-ubyte.gz
 
 *.index
 
-*.data-00000-of-00001
-
 *.local
 
 .idea/dictionaries/alex.xml
@@ -41,3 +39,4 @@ test_data/mnist/train-images-idx3-ubyte
 
 test_data/mnist/train-labels-idx1-ubyte
 
+model/mlp/stock_baseline/ckp/checkpoint

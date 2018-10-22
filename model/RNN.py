@@ -4,8 +4,11 @@ import tensorflow as tf
 from util import fn_util
 from util import dl_util
 import numpy as np
+from util import log_util
+
 
 MNIST_BOUNDARIES = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+
 
 class RNN:
     def __init__(self, config_file):
@@ -30,6 +33,9 @@ class RNN:
         self.opt_fn = self.config.get("Hyper Parameters", "opt_fn")
         self.acc_fn = self.config.get("Hyper Parameters", "acc_fn")
         self.model_dir = self.config.get("Hyper Parameters", "model_dir") + self.model_name + "/ckp/"
+        self.tensorboard_summary_enabled = self.config.get("Hyper Parameters", "enable_tensorboard_log")
+
+        self.logger = log_util.get_file_logger(self.model_name, self.log_dir + self.model_name + ".txt")
 
     def __init_network(self):
         self.layers = self.config.sections()
@@ -119,8 +125,10 @@ class RNN:
             best_accuracy = 0
             avg_accuracy = 0
             merged = tf.summary.merge_all()
-            writer = tf.summary.FileWriter(self.log_dir, sess.graph)
             saver = tf.train.Saver(max_to_keep=5)
+
+            if self.tensorboard_summary_enabled:
+                writer = tf.summary.FileWriter(self.log_dir, sess.graph)
 
             next_xs, next_ys = iterator.get_next()
 
@@ -130,24 +138,12 @@ class RNN:
             global_step = 0
             while global_step < self.echo:
                 raw_xs, raw_ys = sess.run([next_xs, next_ys])
-                # print(raw_xs)
-                # print(raw_ys)
                 # batch_xs = raw_xs # No need to use dict_to_list because MNIST is ndarry
                 batch_xs = dl_util.dict_to_list(raw_xs)
-                # print("batch xs shape:")
-                # [batch, all pixels]
-                # print(batch_xs.shape)
-                # print(batch_xs)
                 batch_xs = batch_xs.reshape((-1, self.time_steps, self.input_size))
-                # [batch, time_steps, input_size]
-                # print(batch_xs.shape)
-                # print("Reshaped batch xs:")
-                # print(batch_xs.shape)
                 # batch_ys = dl_util.one_hot(raw_ys, boundaries=MNIST_BOUNDARIES)
                 batch_ys = dl_util.one_hot(raw_ys)
                 batch_ys = dl_util.rnn_output_split(batch_ys, self.time_steps, self.output_size)
-                # print("batch ys shape:")
-                # print(batch_ys.shape)
 
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
@@ -155,7 +151,9 @@ class RNN:
                                                       feed_dict={self.x: batch_xs, self.y_: batch_ys},
                                                       options=run_options,
                                                       run_metadata=run_metadata)
-                writer.add_summary(summary, global_step)
+
+                if self.tensorboard_summary_enabled:
+                    writer.add_summary(summary, global_step)
 
                 if min_cost > cost:
                     saver.save(sess, self.model_dir + self.model_name, global_step=global_step)
@@ -168,17 +166,22 @@ class RNN:
                     avg_accuracy = avg_accuracy + accuracy
 
                 if global_step % 100 == 0:
-                    print (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                    print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                     print("Step " + str(global_step) + ": cost is " + str(cost))
+                    self.logger.info("Step " + str(global_step) + ": cost is " + str(cost))
                     _, acc = sess.run([merged, self.accuracy], feed_dict={self.x: batch_xs, self.y_: batch_ys})
                     print("Accuracy is: " + str(acc))
-
+                    self.logger.info("Accuracy is: " + str(acc))
                 global_step = global_step + 1
-            writer.close()
+
+            if self.tensorboard_summary_enabled:
+                writer.close()
 
             print("----------------------------------------------------------")
             print("Best Accuracy is: " + str(best_accuracy))
+            self.logger.info("Best Accuracy is: " + str(best_accuracy))
             print("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
+            self.logger.info("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
 
     def eval(self, dataset):
         pass

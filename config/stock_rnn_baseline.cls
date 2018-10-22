@@ -32,3 +32,4 @@ opt_fn = tf.train.AdamOptimizer
 acc_fn = correct_prediction
 model_dir = rnn/
 echo = 50000
+enable_tensorboard_log = true

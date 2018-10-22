@@ -97,3 +97,4 @@ opt_fn = tf.train.AdamOptimizer
 acc_fn = correct_prediction
 model_dir = D:\Models\mlp\mlp_ext_20180807_0002_02\
 echo = 50000
+enable_tensorboard_log = true
