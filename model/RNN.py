@@ -203,3 +203,4 @@ if __name__ == "__main__":
     train_dataset = mnist.train(mnist.MNIST_LOCAL_DIR)
     rnn.train(train_dataset)
     pass
+

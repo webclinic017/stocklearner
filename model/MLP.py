@@ -272,3 +272,4 @@ class ModelNotTrained(Exception):
 #         ,[6.2,2.9,4.3,1.3] # 1
 #     ])
 #     mlp.predict(predict_data)
+
