@@ -1,5 +1,5 @@
-from model import MLP
-from model import RNN
+from model import mlp
+from model import rnn
 import configparser
 
 # def get_model(model_type, model_config_path, model_name):
@@ -10,11 +10,11 @@ def get_model(model_config_path):
     print(model_type)
 
     if model_type == "MLP":
-        model = MLP.MLP(config_file=model_config_path)
+        model = mlp.MLP(config_file=model_config_path)
         return model
 
     if model_type == "RNN":
-        model = RNN.RNN(config_file=model_config_path)
+        model = rnn.RNN(config_file=model_config_path)
         return model
     raise ModelTypeNotFound()
 
