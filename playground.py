@@ -28,18 +28,57 @@ ary = a(lst, 3, 2)
 print(ary)
 '''
 
-import logging
+# import logging
+#
+# logger = logging.getLogger(__name__)
+# logger.setLevel(level=logging.INFO)
+#
+# handler = logging.FileHandler("test_log.txt")
+# formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+# handler.setFormatter(formatter)
+#
+# logger.addHandler(handler)
+#
+# logger.info("Start print log")
+# logger.debug("Do something")
+# logger.warning("Something maybe fail.")
+# logger.info("Finish")
 
-logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
 
-handler = logging.FileHandler("test_log.txt")
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
+class Parent:
+    def __init__(self, name):
+        print(name)
+        self.name = name
+        self.__fn_a()
+        self.__fn_b()
 
-logger.addHandler(handler)
+    def __fn_a(self):
+        print("Parent->fn_a")
 
-logger.info("Start print log")
-logger.debug("Do something")
-logger.warning("Something maybe fail.")
-logger.info("Finish")
+    def __fn_b(self):
+        print("Parent->fn_b")
+
+    def fn_c(self):
+        print("Parent->fn_c")
+
+
+class Child(Parent):
+    def __init__(self, name):
+        Parent.__init__(self, name)
+        print(name)
+        self.__fn_a()
+        self.__fn_b()
+
+    def __fn_a(self):
+        print("Child->fn_a")
+
+    def __fn_b(self):
+        print("Child->fn_b")
+        self.fn_c()
+
+some = Parent("1")
+print("------------------")
+another = Child("2")
+print("++++++++++++++++++")
+print(another.name)
+# another.fn_c()

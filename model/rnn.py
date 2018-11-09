@@ -1,41 +1,20 @@
-import configparser
 import datetime
-import tensorflow as tf
 from util import fn_util
 from util import dl_util
-import numpy as np
-from util import log_util
-
+from model.base_network import *
 
 MNIST_BOUNDARIES = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
 
-class RNN:
+class RNN(Network):
     def __init__(self, config_file):
-        self.config_file = config_file
-        self.config = configparser.ConfigParser()
-        self.config.read(self.config_file)
+        Network.__init__(self, config_file)
 
-        self.__init_hyper_param()
+        # self.__init_hyper_param()
         self.__init_network()
 
     def __init_hyper_param(self):
-        self.model_name = self.config.get("Model", "name")
-
-        self.batch_size = self.config.getint("Dataset", "batch_size")
-        self.repeat = self.config.getint("Dataset", "repeat_time")
-
-        self.learning_rate = self.config.getfloat("Hyper Parameters", "learning_rate")
-        self.echo = self.config.getint("Hyper Parameters", "echo")
-        self.type = self.config.get("Hyper Parameters", "type")
-        self.log_dir = self.config.get("Hyper Parameters", "log_dir") + self.model_name + "/log/"
-        self.loss_fn = self.config.get("Hyper Parameters", "loss_fn")
-        self.opt_fn = self.config.get("Hyper Parameters", "opt_fn")
-        self.acc_fn = self.config.get("Hyper Parameters", "acc_fn")
-        self.model_dir = self.config.get("Hyper Parameters", "model_dir") + self.model_name + "/ckp/"
-        self.tensorboard_summary_enabled = self.config.get("Hyper Parameters", "enable_tensorboard_log")
-
-        self.logger = log_util.get_file_logger(self.model_name, self.log_dir + self.model_name + ".txt")
+        pass
 
     def __init_network(self):
         self.layers = self.config.sections()
@@ -80,24 +59,16 @@ class RNN:
         print("Using Static RNN")
 
         with tf.name_scope("Output"):
-            # print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             self.output_size = self.config.getint("Output", "unit")
             self.y_ = tf.placeholder("float", [None, self.output_size])
             act = fn_util.get_act_fn(self.config.get("Output", "act_fn"))
-            # print(len(self.network))
             self.network = tf.contrib.layers.fully_connected(self.network[-1], self.output_size, activation_fn=act)
-            # print(self.network.shape)
             print("Building Output Layer:Output Size =>" + str(self.output_size))
-            # print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
         with tf.name_scope("Loss"):
-            # print("========================================================")
             with tf.name_scope(self.loss_fn):
-                # print(self.y_.shape)
-                # print(self.network.shape)
                 self.cost = fn_util.get_loss_fn(self.loss_fn, self.y_, self.network)
                 tf.summary.scalar(self.loss_fn, self.cost)
-            # print("========================================================")
         with tf.name_scope("Train_Step"):
             optimizer = fn_util.get_opt_fn(self.opt_fn)
             self.train_step = optimizer(self.learning_rate).minimize(self.cost)
@@ -106,7 +77,6 @@ class RNN:
             self.accuracy = fn_util.get_acc_fn(self.acc_fn, self.y_, self.network)
 
     def train(self, dataset):
-        # dataset = dataset.batch(self.batch_size * self.time_steps)
         dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.time_steps * self.batch_size))
         # dataset = dataset.batch(self.batch_size * self.time_steps, drop_remainder= True) # available in tf 1.10
         dataset = dataset.repeat(self.repeat)
@@ -188,19 +158,3 @@ class RNN:
 
     def predict(self, batch_x):
         pass
-
-
-class ModelNotTrained(Exception):
-    def __init__(self):
-        print("Model is not trained yet")
-
-
-if __name__ == "__main__":
-    my_config_file = "/Users/alex/Desktop/StockLearner/config/mnist_rnn_baseline.cls"
-    rnn = RNN(my_config_file, "mnist_baseline")
-
-    from test import mnist
-    train_dataset = mnist.train(mnist.MNIST_LOCAL_DIR)
-    rnn.train(train_dataset)
-    pass
-

@@ -1,6 +1,7 @@
 import configparser
 
-from model.ff_estimator import mlp, rnn
+from model import rnn
+from model.ff_estimator import mlp
 
 
 # def get_model(model_type, model_config_path, model_name):

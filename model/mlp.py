@@ -1,54 +1,20 @@
-import os
 import datetime
-import configparser
-import tensorflow as tf
-# import traceback
-# import hashlib
-# import numpy as np
 from util import fn_util
 from util import dl_util
-from util import log_util
+from model.base_network import *
 
 IRIS_BOUNDARIES = [0, 1]
 
 
-class MLP:
+class MLP(Network):
     def __init__(self, config_file):
-        self.config_file = config_file
-        self.config = configparser.ConfigParser()
-        self.config.read(self.config_file)
+        Network.__init__(self, config_file)
 
-        self.__init_hyper_param()
+        # self.__init_hyper_param()
         self.__init_network()
 
     def __init_hyper_param(self):
-        self.model_name = self.config.get("Model", "name")
-        self.batch_size = self.config.getint("Dataset", "batch_size")
-        self.repeat = self.config.getint("Dataset", "repeat_time")
-
-        self.learning_rate = self.config.getfloat("Hyper Parameters", "learning_rate")
-        self.echo = self.config.getint("Hyper Parameters", "echo")
-        self.type = self.config.get("Hyper Parameters", "type")
-        self.log_dir = self.config.get("Hyper Parameters", "log_dir") + self.model_name + "/log/"
-        self.loss_fn = self.config.get("Hyper Parameters", "loss_fn")
-        self.opt_fn = self.config.get("Hyper Parameters", "opt_fn")
-        self.acc_fn = self.config.get("Hyper Parameters", "acc_fn")
-        self.model_dir = self.config.get("Hyper Parameters", "model_dir") + self.model_name + "/ckp/"
-        self.tensorboard_summary_enabled = self.config.get("Hyper Parameters", "enable_tensorboard_log")
-
-        self.logger = log_util.get_file_logger(self.model_name, self.log_dir + self.model_name + ".txt")
-
-    @staticmethod
-    def __var_summaries(var):
-        with tf.name_scope("Summaries"):
-            mean = tf.reduce_mean(var)
-            tf.summary.scalar("mean", mean)
-            with tf.name_scope("stddev"):
-                stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-            tf.summary.scalar("stddev", stddev)
-            tf.summary.scalar("max", tf.reduce_max(var))
-            tf.summary.scalar("min", tf.reduce_min(var))
-            tf.summary.histogram("histogram", var)
+        pass
 
     def __init_network(self):
         self.layers = self.config.sections()
@@ -71,12 +37,12 @@ class MLP:
                                             dtype=tf.float32,
                                             initializer=tf.random_normal_initializer(),
                                             shape=[n_in, n_units])
-                        self.__var_summaries(W)
+                        self.var_summaries(W)
                         b = tf.get_variable("Bias",
                                             dtype=tf.float32,
                                             initializer=tf.constant_initializer(value=0.1),
                                             shape=[n_units])
-                        self.__var_summaries(b)
+                        self.var_summaries(b)
                     with tf.name_scope("Wx_plus_b"):
                         preactivate = tf.matmul(self.network, W) + b
                         tf.summary.histogram("pre_activation", preactivate)
@@ -233,43 +199,3 @@ class MLP:
                 y = sess.run(self.network, feed_dict={self.x: batch_x})
                 print(y)
                 print(sess.run(tf.argmax(y, 1)))
-
-            # for f in [os.path.join(self.model_dir, i) for i in os.listdir(self.model_dir)]:
-            #     print(f + " " + md5(f))
-
-
-class ModelNotTrained(Exception):
-    def __init__(self):
-        print("Model is not trained yet")
-
-
-# def md5(filename):
-#     hash_md5 = hashlib.md5()
-#     with open(filename, "rb") as f:
-#         for chunk in iter(lambda : f.read(4096), b""):
-#             hash_md5.update(chunk)
-#     return hash_md5.hexdigest()
-
-# if __name__ == "__main__":
-#     from test import iris
-#
-#     (train_x, train_y), (test_x, test_y) = iris.load_data()
-#     dataset_train = iris.train_input_fn(train_x, train_y)
-#     dataset_eval = iris.eval_input_fn(test_x, test_y)
-#
-#     my_config_file = "/Users/alex/Desktop/StockLearner/config/iris_mlp_baseline.cls"
-#     mlp = MLP(config_file=my_config_file, model_name="iris_baseline")
-#     mlp.train_by_dataset(dataset_train)
-#     mlp.eval_by_dataset(dataset_eval)
-#
-#     import numpy as np
-#     predict_data = np.array([
-#         [5.9,3.0,4.2,1.5]  # 1
-#         ,[6.9,3.1,5.4,2.1] # 2
-#         ,[5.1,3.3,1.7,0.5] # 0
-#         ,[6.0,3.4,4.5,1.6] # 1
-#         ,[5.5,2.5,4.0,1.3] # 1
-#         ,[6.2,2.9,4.3,1.3] # 1
-#     ])
-#     mlp.predict(predict_data)
-

@@ -1,5 +1,5 @@
 # from model.MLP import MLP
-from feed import csv_data as stock
+from feed import csv_data as stock_data
 from util import model_util
 import tensorflow as tf
 import configparser
@@ -27,8 +27,8 @@ def main(argv):
         logger.info("Pool size: " + str(pool_size))
         logger.info("Config file list path: " + config_list_path)
 
-        train_dataset = stock.csv_input_fn(training_data_path)
-        eval_dataset = stock.csv_input_fn(eval_data_path)
+        train_dataset = stock_data.csv_input_fn(training_data_path)
+        eval_dataset = stock_data.csv_input_fn(eval_data_path)
 
         pool = mp.Pool(processes=pool_size)
         for config_file in config_file_list:
