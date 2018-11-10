@@ -4,18 +4,19 @@ type = AutoEncoder
 
 [Input]
 unit = 28
+act_fn = tf.nn.relu6
 
 [Layer1]
-unit = 10
+unit = 128
 act_fn = tf.nn.relu6
 
 [Layer2]
-unit = 10
+unit = 64
 keep_prob = 0.9
 act_fn = tf.nn.relu6
 
 [Layer3]
-unit = 10
+unit = 32
 keep_prob = 0.9
 act_fn = tf.nn.relu6
 

@@ -35,6 +35,7 @@ act_fn = tf.nn.relu6
 
 [Output]
 unit = 8
+act_fn = tf.nn.relu6
 
 [Dataset]
 batch_size = 200

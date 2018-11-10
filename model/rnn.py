@@ -83,14 +83,13 @@ class RNN(Network):
         iterator = dataset.make_one_shot_iterator()
 
         # 2018-08-06 - To fully utilize CPUs for training
-        # config = tf.ConfigProto(device_count={"CPU": 8},
-        #                         inter_op_parallelism_threads=16,
-        #                         intra_op_parallelism_threads=16,
-        #                         log_device_placement=True
-        #                         )
-        #
-        # with tf.Session(config=config) as sess:
-        with tf.Session() as sess:
+        config = tf.ConfigProto(device_count={"CPU": 8},
+                                inter_op_parallelism_threads=16,
+                                intra_op_parallelism_threads=16,
+                                log_device_placement=True
+                                )
+
+        with tf.Session(config=config) as sess:
             min_cost = 100
             best_accuracy = 0
             avg_accuracy = 0

@@ -46,24 +46,25 @@ class MLP(Network):
                     with tf.name_scope("Wx_plus_b"):
                         preactivate = tf.matmul(self.network, W) + b
                         tf.summary.histogram("pre_activation", preactivate)
+                    print("Building hidden layers:Name =>" + layer + " Size =>[" + str(n_in) + ", " + str(n_units) + "]")
+
                     if layer == "Output":
                         self.y_ = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=layer)
                         self.network = preactivate
                         print("Building Output layer:Output Size =>[" + str(n_in) + ", " + str(n_units) + "]")
-                    else:
-                        act = fn_util.get_act_fn(self.config.get(layer, "act_fn"))
-                        self.network = act(preactivate)
-                        tf.summary.histogram("activation", self.network)
-                        print("Building hidden layers:Name =>" + layer + " Size =>[" + str(n_in) + ", " + str(n_units) + "]")
-                        print("Activation Function =>" + self.config.get(layer, "act_fn"))
-                        try:
-                            with tf.name_scope("dropout"):
-                                keep_prob = self.config.getfloat(layer, "keep_prob")
-                                self.network = tf.nn.dropout(self.network, keep_prob=keep_prob)
-                                tf.summary.scalar("dropout", keep_prob)
-                                print("Keep prob =>" + str(keep_prob))
-                        except Exception as _:
-                            pass
+
+                    act = fn_util.get_act_fn(self.config.get(layer, "act_fn"))
+                    self.network = act(preactivate)
+                    tf.summary.histogram("activation", self.network)
+                    print("Activation Function =>" + self.config.get(layer, "act_fn"))
+                    try:
+                        with tf.name_scope("dropout"):
+                            keep_prob = self.config.getfloat(layer, "keep_prob")
+                            self.network = tf.nn.dropout(self.network, keep_prob=keep_prob)
+                            tf.summary.scalar("dropout", keep_prob)
+                            print("Keep prob =>" + str(keep_prob))
+                    except Exception as _:
+                        pass
 
         with tf.name_scope("Loss"):
             with tf.name_scope(self.loss_fn):
@@ -146,8 +147,6 @@ class MLP(Network):
             self.logger.info("Best Accuracy is: " + str(best_accuracy))
             print("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
             self.logger.info("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
-        # for f in [os.path.join(self.model_dir, i) for i in os.listdir(self.model_dir)]:
-        #     print(f + " " + md5(f))
 
     def eval(self, dataset):
         if not os.path.exists(self.model_dir):
@@ -177,9 +176,6 @@ class MLP(Network):
 
                 acc = sess.run(self.accuracy, feed_dict={self.x: batch_xs, self.y_: batch_ys})
                 print("Accuracy for evaluation is: " + str(acc))
-
-            # for f in [os.path.join(self.model_dir, i) for i in os.listdir(self.model_dir)]:
-            #     print(f + " " + md5(f))
         else:
             raise ModelNotTrained()
 
