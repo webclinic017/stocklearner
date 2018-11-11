@@ -6,13 +6,15 @@ class AutoEncoder(Network):
     def __init__(self, config_file):
         Network.__init__(self, config_file)
 
-        # self.__init_hyper_param()
-        self.__init_network()
+        self._init_hyper_param()
+        self._init_network()
+        self._add_train_ops()
 
-    def __init_hyper_param(self):
+    def _init_hyper_param(self):
+        # add additional hyper parameter if necessary
         pass
 
-    def __init_network(self):
+    def _init_network(self):
         self.layers = self.config.sections()
         self.layers.remove("Model")
         self.layers.remove("Hyper Parameters")
