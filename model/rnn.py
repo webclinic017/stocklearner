@@ -1,5 +1,4 @@
 import datetime
-from util import fn_util
 from util import dl_util
 from model.base_network import *
 
@@ -10,14 +9,17 @@ class RNN(Network):
     def __init__(self, config_file):
         Network.__init__(self, config_file)
 
-        # self.__init_hyper_param()
-        self.__init_network()
+        self._init_hyper_param()
+        self._init_network()
+        self._add_train_ops()
 
-    def __init_hyper_param(self):
+    def _init_hyper_param(self):
+        # add additional hyper parameter if necessary
         pass
 
-    def __init_network(self):
+    def _init_network(self):
         self.layers = self.config.sections()
+        self.layers.remove("Model")
         self.layers.remove("Hyper Parameters")
         self.layers.remove("Dataset")
         self.layers.remove("Input")
@@ -64,17 +66,6 @@ class RNN(Network):
             act = fn_util.get_act_fn(self.config.get("Output", "act_fn"))
             self.network = tf.contrib.layers.fully_connected(self.network[-1], self.output_size, activation_fn=act)
             print("Building Output Layer:Output Size =>" + str(self.output_size))
-
-        with tf.name_scope("Loss"):
-            with tf.name_scope(self.loss_fn):
-                self.cost = fn_util.get_loss_fn(self.loss_fn, self.y_, self.network)
-                tf.summary.scalar(self.loss_fn, self.cost)
-        with tf.name_scope("Train_Step"):
-            optimizer = fn_util.get_opt_fn(self.opt_fn)
-            self.train_step = optimizer(self.learning_rate).minimize(self.cost)
-
-        with tf.name_scope("Accuracy"):
-            self.accuracy = fn_util.get_acc_fn(self.acc_fn, self.y_, self.network)
 
     def train(self, dataset):
         dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.time_steps * self.batch_size))

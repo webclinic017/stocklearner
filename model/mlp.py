@@ -1,5 +1,4 @@
 import datetime
-from util import fn_util
 from util import dl_util
 from model.base_network import *
 
@@ -10,13 +9,15 @@ class MLP(Network):
     def __init__(self, config_file):
         Network.__init__(self, config_file)
 
-        # self.__init_hyper_param()
-        self.__init_network()
+        self._init_hyper_param()
+        self._init_network()
+        self._add_train_ops()
 
-    def __init_hyper_param(self):
+    def _init_hyper_param(self):
+        # add additional hyper parameter if necessary
         pass
 
-    def __init_network(self):
+    def _init_network(self):
         self.layers = self.config.sections()
         self.layers.remove("Model")
         self.layers.remove("Hyper Parameters")
@@ -24,58 +25,26 @@ class MLP(Network):
 
         for layer in self.layers:
             with tf.name_scope(layer):
+                n_units = self.config.getint(layer, "unit")
+
                 if layer == "Input":
-                    input_size = self.config.getint(layer, "unit")
-                    self.x = tf.placeholder(dtype=tf.float32, shape=[None, input_size], name=layer)
+                    self.x = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=layer)
+                    print("Building Input Layer:Input Size =>" + str(n_units))
                     self.network = self.x
-                    print("Building Input layer:Input Size =>" + str(input_size))
+
+                elif layer == "Output":
+                    self.y_ = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=layer)
+                    self.network = tf.layers.dense(self.network, n_units, activation=act, name=layer)
+                    print("Building Input Layer:Output Size =>" + str(n_units))
                 else:
-                    n_in = int(self.network.get_shape()[-1])
-                    n_units = self.config.getint(layer, "unit")
-                    with tf.variable_scope(layer):
-                        W = tf.get_variable("Weight",
-                                            dtype=tf.float32,
-                                            initializer=tf.random_normal_initializer(),
-                                            shape=[n_in, n_units])
-                        self.var_summaries(W)
-                        b = tf.get_variable("Bias",
-                                            dtype=tf.float32,
-                                            initializer=tf.constant_initializer(value=0.1),
-                                            shape=[n_units])
-                        self.var_summaries(b)
-                    with tf.name_scope("Wx_plus_b"):
-                        preactivate = tf.matmul(self.network, W) + b
-                        tf.summary.histogram("pre_activation", preactivate)
-                    print("Building hidden layers:Name =>" + layer + " Size =>[" + str(n_in) + ", " + str(n_units) + "]")
-
-                    if layer == "Output":
-                        self.y_ = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=layer)
-                        self.network = preactivate
-                        print("Building Output layer:Output Size =>[" + str(n_in) + ", " + str(n_units) + "]")
-
                     act = fn_util.get_act_fn(self.config.get(layer, "act_fn"))
-                    self.network = act(preactivate)
-                    tf.summary.histogram("activation", self.network)
-                    print("Activation Function =>" + self.config.get(layer, "act_fn"))
-                    try:
-                        with tf.name_scope("dropout"):
-                            keep_prob = self.config.getfloat(layer, "keep_prob")
-                            self.network = tf.nn.dropout(self.network, keep_prob=keep_prob)
-                            tf.summary.scalar("dropout", keep_prob)
-                            print("Keep prob =>" + str(keep_prob))
-                    except Exception as _:
-                        pass
+                    self.network = tf.layers.dense(self.network, n_units, activation=act, name=layer)
+                    print("Building Hidden Layer:Unit Size =>" + str(n_units))
 
-        with tf.name_scope("Loss"):
-            with tf.name_scope(self.loss_fn):
-                self.cost = fn_util.get_loss_fn(self.loss_fn, self.y_, self.network)
-                tf.summary.scalar(self.loss_fn, self.cost)
-        with tf.name_scope("Train_Step"):
-            optimizer = fn_util.get_opt_fn(self.opt_fn)
-            self.train_step = optimizer(self.learning_rate).minimize(self.cost)
-
-        with tf.name_scope("Accuracy"):
-            self.accuracy = fn_util.get_acc_fn(self.acc_fn, self.y_, self.network)
+                    if self.config.has_option(layer, "keep_prob"):
+                        keep_prob = self.config.getfloat(layer, "keep_prob")
+                        self.network = tf.nn.dropout(self.network, keep_prob=keep_prob, name=layer+"_dropout")
+                        print("Building Dropout Layer:Keep Prob =>" + str(keep_prob))
 
     def train(self, dataset):
         dataset = dataset.batch(self.batch_size)

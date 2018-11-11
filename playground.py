@@ -82,3 +82,27 @@ another = Child("2")
 print("++++++++++++++++++")
 print(another.name)
 # another.fn_c()
+
+
+def test(func):
+    func()
+    print
+    "call test"
+
+
+def test1(f):
+    f()
+    print
+    "call test1"
+
+
+def main():
+    @test
+    def fun(a, b):
+        print
+        "call fun"
+
+        @test1
+        def fun1():
+            print
+            "call fun1"
