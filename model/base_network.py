@@ -157,9 +157,9 @@ class Network:
             self.logger.info("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
             self.logger.info("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
 
-            if self.type == "classification":
-                f1_score = tf.contrib.metrics.f1_score(labels=batch_ys, predictions=self.y_)
-                sess.run(f1_score)
+            # if self.type == "classification":
+            #     f1_score = tf.contrib.metrics.f1_score(labels=batch_ys, predictions=self.y_)
+            #     sess.run(f1_score)
 
     def eval(self, dataset):
         if not os.path.exists(self.model_dir):
