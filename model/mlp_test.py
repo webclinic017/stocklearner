@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     from feed.csv_data import csv_input_fn
     config_file_path = "../config/stock_mlp_baseline.cls"
-    training_data_path = "D:\\Output\\000017\\"
+    training_data_path = "D:\\t"
     training_dataset = csv_input_fn(training_data_path)
 
     mlp = MLP(config_file=config_file_path)

@@ -139,11 +139,10 @@ class Network:
                     avg_accuracy = avg_accuracy + accuracy
 
                 if current_step % 100 == 0:
-                    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                    print("Step " + str(current_step) + ": cost is " + str(cost))
+                    self.logger.info("Step " + str(current_step) + ": cost is " + str(cost))
                     self.logger.info("Step " + str(current_step) + ": cost is " + str(cost))
                     _, acc = sess.run([merged, self.accuracy], feed_dict={self.x: batch_xs, self.y_: batch_ys})
-                    print("Accuracy is: " + str(acc))
+                    self.logger.info("Accuracy is: " + str(acc))
                     self.logger.info("Accuracy is: " + str(acc))
 
                 current_step = current_step + 1
@@ -151,10 +150,11 @@ class Network:
             if self.tensorboard_summary_enabled:
                 writer.close()
 
-            print("----------------------------------------------------------")
-            print("Best Accuracy is: " + str(best_accuracy))
+            self.logger.info("----------------------------------------------------------")
+            self.logger.info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             self.logger.info("Best Accuracy is: " + str(best_accuracy))
-            print("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
+            self.logger.info("Best Accuracy is: " + str(best_accuracy))
+            self.logger.info("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
             self.logger.info("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
 
             if self.type == "classification":
@@ -166,7 +166,7 @@ class Network:
             raise ModelNotTrained()
 
         if len(os.listdir(self.model_dir)) > 0:
-            print("----------------------------------------------------------")
+            self.logger.info("----------------------------------------------------------")
 
             if self.model_type == "RNN":
                 dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.time_steps * self.batch_size))
@@ -184,7 +184,7 @@ class Network:
 
                 saver = tf.train.Saver()
                 # saver = tf.train.import_meta_graph(tf.train.latest_checkpoint(self.model_dir)+".meta")
-                # print(tf.train.latest_checkpoint(self.model_dir))
+                # self.logger.info(tf.train.latest_checkpoint(self.model_dir))
                 saver.restore(sess, tf.train.latest_checkpoint(self.model_dir))
 
                 raw_xs, raw_ys = sess.run([next_xs, next_ys])
@@ -200,7 +200,7 @@ class Network:
                     batch_ys = dl_util.rnn_output_split(batch_ys, self.time_steps, self.output_size)
 
                 acc = sess.run(self.accuracy, feed_dict={self.x: batch_xs, self.y_: batch_ys})
-                print("Accuracy for evaluation is: " + str(acc))
+                self.logger.info("Accuracy for evaluation is: " + str(acc))
         else:
             raise ModelNotTrained()
 
@@ -210,4 +210,4 @@ class Network:
 
 class ModelNotTrained(Exception):
     def __init__(self):
-        print("Model is not trained yet")
+        self.logger.info("Model is not trained yet")

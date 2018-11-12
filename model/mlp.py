@@ -27,22 +27,22 @@ class MLP(Network):
 
                 if layer == "Input":
                     self.x = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=layer)
-                    print("Building Input Layer:Input Size =>" + str(n_units))
+                    self.logger.info("Building Input Layer:Input Size =>" + str(n_units))
                     self.network = self.x
 
                 elif layer == "Output":
                     self.y_ = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=layer)
                     self.network = tf.layers.dense(self.network, n_units, activation=act, name=layer)
-                    print("Building Input Layer:Output Size =>" + str(n_units))
+                    self.logger.info("Building Input Layer:Output Size =>" + str(n_units))
                 else:
                     act = fn_util.get_act_fn(self.config.get(layer, "act_fn"))
                     self.network = tf.layers.dense(self.network, n_units, activation=act, name=layer)
-                    print("Building Hidden Layer:Unit Size =>" + str(n_units))
+                    self.logger.info("Building Hidden Layer:Unit Size =>" + str(n_units))
 
                     if self.config.has_option(layer, "keep_prob"):
                         keep_prob = self.config.getfloat(layer, "keep_prob")
                         self.network = tf.nn.dropout(self.network, keep_prob=keep_prob, name=layer+"_dropout")
-                        print("Building Dropout Layer:Keep Prob =>" + str(keep_prob))
+                        self.logger.info("Building Dropout Layer:Keep Prob =>" + str(keep_prob))
 
     def predict(self, batch_x):
         if not os.path.exists(self.model_dir):
@@ -58,5 +58,5 @@ class MLP(Network):
                 saver.restore(sess, tf.train.latest_checkpoint(self.model_dir))
 
                 y = sess.run(self.network, feed_dict={self.x: batch_x})
-                print(y)
-                print(sess.run(tf.argmax(y, 1)))
+                self.logger.info(y)
+                self.logger.info(sess.run(tf.argmax(y, 1)))

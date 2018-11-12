@@ -1,26 +1,25 @@
-import configparser
+from model.mlp import *
+from model.rnn import *
 
-from model import rnn
-from model.ff_estimator import mlp
+logger = log_util.get_file_logger("model_util.py", "main.log")
 
 
-# def get_model(model_type, model_config_path, model_name):
 def get_model(model_config_path):
     config = configparser.ConfigParser()
     config.read(model_config_path)
     model_type = config.get("Model", "type")
-    print(model_type)
+    logger.info("Current model type is " + model_type)
 
     if model_type == "MLP":
-        model = mlp.MLP(config_file=model_config_path)
+        model = MLP(config_file=model_config_path)
         return model
 
     if model_type == "RNN":
-        model = rnn.RNN(config_file=model_config_path)
+        model = RNN(config_file=model_config_path)
         return model
     raise ModelTypeNotFound()
 
 
 class ModelTypeNotFound(Exception):
     def __init__(self):
-        print("Model Type is not found")
+        logger.error("Model Type is not found")

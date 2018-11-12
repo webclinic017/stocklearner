@@ -19,7 +19,7 @@ def csv_input_fn(csv_path, batch_size=None, buffer_size=None, repeat=None):
     # 2018-09-18 Remove .DS_Store for Mac OS
     filenames = [join(csv_path, f) for f in os.listdir(csv_path) if f != ".DS_Store"]
     # print(filenames)
-    dataset = tf.data.TextLineDataset(filenames).skip(1)
+    dataset = tf.data.TextLineDataset(filenames).skip(0)
     dataset = dataset.map(_parse_line)
 
     if buffer_size is not None:
