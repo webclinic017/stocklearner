@@ -66,8 +66,8 @@ class Network:
         with tf.name_scope("Train_Step"):
             optimizer = fn_util.get_opt_fn(self.opt_fn)
             self.train_step = optimizer(self.learning_rate).minimize(self.cost)
-        with tf.name_scope("Accuracy"):
 
+        with tf.name_scope("Accuracy"):
             self.accuracy = fn_util.get_acc_fn(self.acc_fn, self.y_, self.network)
 
     def train(self, dataset):
@@ -157,6 +157,10 @@ class Network:
             print("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
             self.logger.info("Average Accuracy is: " + str(round(avg_accuracy / (self.echo - 10000), 2)))
 
+            if self.type == "classification":
+                f1_score = tf.contrib.metrics.f1_score(labels=batch_ys, predictions=self.y_)
+                sess.run(f1_score)
+
     def eval(self, dataset):
         if not os.path.exists(self.model_dir):
             raise ModelNotTrained()
@@ -164,7 +168,11 @@ class Network:
         if len(os.listdir(self.model_dir)) > 0:
             print("----------------------------------------------------------")
 
-            dataset = dataset.batch(self.batch_size)
+            if self.model_type == "RNN":
+                dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.time_steps * self.batch_size))
+            else:
+                dataset = dataset.batch(self.batch_size)
+
             dataset = dataset.repeat(self.repeat)
             iterator = dataset.make_one_shot_iterator()
 
@@ -180,8 +188,16 @@ class Network:
                 saver.restore(sess, tf.train.latest_checkpoint(self.model_dir))
 
                 raw_xs, raw_ys = sess.run([next_xs, next_ys])
+
                 batch_xs = dl_util.dict_to_list(raw_xs)
-                batch_ys = dl_util.one_hot(raw_ys)
+                if self.type == "classification":
+                    batch_ys = dl_util.one_hot(raw_ys)
+                else:
+                    batch_ys = raw_ys
+
+                if self.model_type == "RNN":
+                    batch_xs = batch_xs.reshape((-1, self.time_steps, self.input_size))
+                    batch_ys = dl_util.rnn_output_split(batch_ys, self.time_steps, self.output_size)
 
                 acc = sess.run(self.accuracy, feed_dict={self.x: batch_xs, self.y_: batch_ys})
                 print("Accuracy for evaluation is: " + str(acc))
