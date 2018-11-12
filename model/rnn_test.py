@@ -1,9 +1,12 @@
 from model.rnn import *
 
 if __name__ == "__main__":
-    my_config_file = "../config/mnist_rnn_baseline.cls"
+    my_config_file = "../config/stock_rnn_baseline.cls"
     rnn = RNN(my_config_file)
 
-    from test import mnist
-    train_dataset = mnist.train(mnist.MNIST_LOCAL_DIR)
-    rnn.train(train_dataset)
+    from feed.csv_data import csv_input_fn
+    config_file_path = "../config/stock_mlp_baseline.cls"
+    training_data_path = "D:\\Output\\000017\\"
+    training_dataset = csv_input_fn(training_data_path)
+
+    rnn.train(training_dataset)

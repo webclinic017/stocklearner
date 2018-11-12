@@ -5,6 +5,10 @@ from util import fn_util
 import os
 
 
+# TODO: eager execution
+# tf.enable_eager_execution()
+
+
 class Network:
     def __init__(self, config_file):
         self.config_file = config_file
