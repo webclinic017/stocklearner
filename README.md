@@ -15,7 +15,7 @@ Usage:
 3. Run main.py
 
 Models:
-We current supports MLP and LSTM only
+We currently support MLP and LSTM only
 
 Data:
 Please use CSV file with columns as below:
