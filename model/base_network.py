@@ -58,6 +58,7 @@ class Network:
     #         tf.summary.histogram("histogram", var)
 
     def _add_train_ops(self):
+        # TODO: add L1 & L2 normalization
         with tf.name_scope("Loss"):
             with tf.name_scope(self.loss_fn):
                 self.cost = fn_util.get_loss_fn(self.loss_fn, self.y_, self.network)

@@ -35,13 +35,16 @@ class MLP(Network):
                     self.network = tf.layers.dense(self.network, n_units, activation=act, name=layer)
                     self.logger.info("Building Input Layer:Output Size =>" + str(n_units))
                 else:
+                    # TODO：1. modify dropout to user tf.layers.dropout
+                    # TODO: 2. add batch normalization
                     act = fn_util.get_act_fn(self.config.get(layer, "act_fn"))
                     self.network = tf.layers.dense(self.network, n_units, activation=act, name=layer)
                     self.logger.info("Building Hidden Layer:Unit Size =>" + str(n_units))
 
                     if self.config.has_option(layer, "keep_prob"):
                         keep_prob = self.config.getfloat(layer, "keep_prob")
-                        self.network = tf.nn.dropout(self.network, keep_prob=keep_prob, name=layer+"_dropout")
+                        self.network = tf.layers.dropout(self.network, rate=(1. - keep_prob), training=True)
+                        # self.network = tf.nn.dropout(self.network, keep_prob=keep_prob, name=layer+"_dropout")
                         self.logger.info("Building Dropout Layer:Keep Prob =>" + str(keep_prob))
 
     def predict(self, batch_x):
