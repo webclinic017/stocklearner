@@ -41,3 +41,6 @@ test_data/mnist/train-labels-idx1-ubyte
 
 model/mlp/stock_baseline/ckp/checkpoint
 main.log
+.idea/modules.xml
+.idea/inspectionProfiles/Project_Default.xml
+.idea/modules.xml

@@ -44,65 +44,16 @@ print(ary)
 # logger.warning("Something maybe fail.")
 # logger.info("Finish")
 
-
-class Parent:
-    def __init__(self, name):
-        print(name)
-        self.name = name
-        self.__fn_a()
-        self.__fn_b()
-
-    def __fn_a(self):
-        print("Parent->fn_a")
-
-    def __fn_b(self):
-        print("Parent->fn_b")
-
-    def fn_c(self):
-        print("Parent->fn_c")
-
-
-class Child(Parent):
-    def __init__(self, name):
-        Parent.__init__(self, name)
-        print(name)
-        self.__fn_a()
-        self.__fn_b()
-
-    def __fn_a(self):
-        print("Child->fn_a")
-
-    def __fn_b(self):
-        print("Child->fn_b")
-        self.fn_c()
-
-some = Parent("1")
-print("------------------")
-another = Child("2")
-print("++++++++++++++++++")
-print(another.name)
-# another.fn_c()
-
-
-def test(func):
-    func()
-    print
-    "call test"
-
-
-def test1(f):
-    f()
-    print
-    "call test1"
-
-
-def main():
-    @test
-    def fun(a, b):
-        print
-        "call fun"
-
-        @test1
-        def fun1():
-            print
-            "call fun1"
+import gym
+env = gym.make('MountainCar-v0')
+for i_episode in range(200):
+    observation = env.reset()
+    for t in range(1000):
+        env.render()
+        # print(observation)
+        action = env.action_space.sample()
+        # print(action)
+        observation, reward, done, info = env.step(action)
+        if done:
+            print("Episode finished after {} timesteps".format(t+1))
+            break
