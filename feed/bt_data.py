@@ -8,7 +8,7 @@ BASIC_COLUMNS = ["DATE", "OPEN", "HIGH", "CLOSE", "LOW", "VOLUME", "PRICE_CHANGE
 class BTAbstractCSVData(GenericCSVData):
     @staticmethod
     def get_params(columns):
-        params = [('nullvalue', float('NaN')), ('dtformat', '%Y-%m-%d'), ('tmformat', '%H:%M:%S'), ]
+        params = [('nullvalue', float('NaN')), ('dtformat', '%Y-%m-%d'), ('tmformat', '%H:%M:%S'), ('headers', False)]
 
         for i in range(len(columns)):
             p = (columns[i].lower(), i)

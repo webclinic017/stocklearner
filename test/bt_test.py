@@ -7,7 +7,7 @@ from feed.bt_data import BTCSVBasicData
 class TestStrategy(bt.Strategy):
     params = (
         ('maperiod', 15),
-        ('printlog', False),
+        ('printlog', True),
     )
 
     def log(self, txt, dt=None, doprint=False):
@@ -30,7 +30,15 @@ class TestStrategy(bt.Strategy):
         self.sma = bt.indicators.SimpleMovingAverage(
             self.datas[0], period=self.params.maperiod)
 
+    def prenext(self):
+        # Simply log the closing price of the series from the reference
+        self.log('Prenext Close, %.2f' % self.dataclose[0])
+
     def notify_order(self, order):
+        # Created, Submitted, Accepted, Partial, Completed, Canceled, Expired, Margin, Rejected = range(9)
+        # 0        1          2         3        4          5         6        7       8
+
+        self.log('notify_order ' + str(order.status))
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
             return
@@ -64,6 +72,7 @@ class TestStrategy(bt.Strategy):
         self.order = None
 
     def notify_trade(self, trade):
+        self.log('notify trade')
         if not trade.isclosed:
             return
 
@@ -72,7 +81,7 @@ class TestStrategy(bt.Strategy):
 
     def next(self):
         # Simply log the closing price of the series from the reference
-        self.log('Close, %.2f' % self.dataclose[0])
+        self.log('Next Close, %.2f' % self.dataclose[0])
 
         # Check if an order is pending ... if yes, we cannot send a 2nd one
         if self.order:
@@ -86,7 +95,6 @@ class TestStrategy(bt.Strategy):
 
                 # BUY, BUY, BUY!!! (with all possible default parameters)
                 self.log('BUY CREATE, %.2f' % self.dataclose[0])
-                self.log('Print testing, %.2f' % self.p_change[0], doprint=True)
 
                 # Keep track of the created order to avoid a 2nd order
                 self.order = self.buy()
