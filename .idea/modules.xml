@@ -3,9 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../AutoScheduler/.idea/AutoScheduler.iml" filepath="$PROJECT_DIR$/../AutoScheduler/.idea/AutoScheduler.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/StockLearner.iml" filepath="$PROJECT_DIR$/.idea/StockLearner.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../StockTransformer/.idea/StockTransformer.iml" filepath="$PROJECT_DIR$/../StockTransformer/.idea/StockTransformer.iml" />
       <module fileurl="file://$USER_HOME$/Desktop/backtrader/.idea/backtrader.iml" filepath="$USER_HOME$/Desktop/backtrader/.idea/backtrader.iml" />
+      <module fileurl="file://$USER_HOME$/Desktop/baselines/.idea/baselines.iml" filepath="$USER_HOME$/Desktop/baselines/.idea/baselines.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/stocklearner.iml" filepath="$PROJECT_DIR$/.idea/stocklearner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../stocktransformer/.idea/stocktransformer.iml" filepath="$PROJECT_DIR$/../stocktransformer/.idea/stocktransformer.iml" />
     </modules>
   </component>
 </project>

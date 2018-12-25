@@ -26,7 +26,7 @@ import numpy as np
 from six.moves import urllib
 import tensorflow as tf
 
-MNIST_LOCAL_DIR = "/Users/alex/Desktop/StockLearner/test_data/mnist"
+MNIST_LOCAL_DIR = "/Users/alex/Desktop/stocklearner/test_data/mnist"
 
 def read32(bytestream):
     """Read 4 bytes from bytestream as an unsigned 32-bit integer."""
@@ -123,8 +123,8 @@ def test(directory):
 
 
 if __name__ == "__main__":
-    train_ds = train("/Users/alex/Desktop/StockLearner/test_data/mnist")
-    test_ds = test("/Users/alex/Desktop/StockLearner/test_data/mnist")
+    train_ds = train("/Users/alex/Desktop/stocklearner/test_data/mnist")
+    test_ds = test("/Users/alex/Desktop/stocklearner/test_data/mnist")
 
     print(type(train_ds))
     print(type(test_ds))

@@ -4,6 +4,8 @@ import backtrader as bt
 
 class RLBaseAgent:
     def __init__(self):
+        # TODO: Change to action with sizer (1/4, 1/2, 3/4, 1)
+        # Hold, BuyHalf, BuyAll, BuyOneQuarter, BuyThreeQuarter, SellHalf, SellAll, SellOneQuarter, SellThreeQuarter
         self.Hold, self.Buy, self.Sell = range(3)
         self.actions = [self.Hold, self.Buy, self.Sell]
 
