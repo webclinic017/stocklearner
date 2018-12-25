@@ -1,6 +1,6 @@
 from feed.bt_data import BTCSVBasicData
-from env.cerebro_ext import RLExtCerebro
-from agent.base import *
+from rl.agent.base import *
+from rl.env.cerebro_ext import RLExtCerebro
 
 episode = 5
 data_path = "./test_data/stock/000002.csv"
