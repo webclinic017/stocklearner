@@ -9,21 +9,12 @@ class RLBaseAgent:
         self.Hold, self.Buy, self.Sell = range(3)
         self.actions = [self.Hold, self.Buy, self.Sell]
 
-    def sample(self):
+    def random_action(self):
         idx = np.random.random_integers(0, len(self.actions) - 1)
         return self.actions[idx]
 
     def choose_action(self, observation):
         raise NotImplementedError
-
-
-class RLAgent01(RLBaseAgent):
-    def __init__(self):
-        RLBaseAgent.__init__(self)
-
-    def choose_action(self, observation):
-        # TODO
-        return self.sample()
 
 
 class RLCommonStrategy(bt.Strategy):
@@ -48,9 +39,16 @@ class RLCommonStrategy(bt.Strategy):
         self.buycomm = None
 
         self.agent = self.env.getagent()
-        self.observation = None
+        self.last_observation = None
+        self.current_observation = None
+        self.reward = 0
+        self.action = None
+        self.done = False
 
-    # As env.step(), but next observation, reward and done will be given in next function.
+        self.current_step = 0
+        self.learning_freq = self.agent.learning_freq
+
+        # As env.step(), but next observation, reward and done will be given in next function.
     def notify_order(self, order):
         self.log("notify_order " + str(order.status))
         if order.status in [order.Submitted, order.Accepted]:
@@ -85,28 +83,44 @@ class RLCommonStrategy(bt.Strategy):
         # Write down: no pending order
         self.order = None
 
+    def _get_reward(self):
+        # TODO:
+        return 0
+
+    def _get_observation(self):
+        # TODO:
+        return "", False
+
     # As env.render(), but need to get observation and reward
     def next(self):
         # Simply log the closing price of the series from the reference
         self.log("Next Close, %.2f" % self.dataclose[0])
 
-        # Fetch observation
-        self.observation = None
+        # Fetch observation, do the rest thing first which should be done in step function
+        self.last_observation, self.done = self.next_observation
+        self.current_observation = self._get_observation()
+        self.reward = self._get_reward()
+        self.agent.store(self.last_observation, self.action, self.reward, self.current_observation, self.done)
 
-        action = self.agent.choose_action(self.observation)
+        self.action = self.agent.choose_action(self.observation)
 
-        if action == self.agent.Hold:
+        if self.action == self.agent.Hold:
             pass
-        elif action == self.agent.Buy:
+        elif self.action == self.agent.Buy:
             # BUY, BUY, BUY!!! (with all possible default parameters)
             self.log("BUY CREATE, %.2f" % self.dataclose[0], True)
 
             # Keep track of the created order to avoid a 2nd order
             self.order = self.buy()
 
-        elif action == self.agent.Sell:
+        elif self.action == self.agent.Sell:
             # SELL, SELL, SELL!!! (with all possible default parameters)
             self.log("SELL CREATE, %.2f" % self.dataclose[0], True)
 
             # Keep track of the created order to avoid a 2nd order
             self.order = self.sell()
+
+        if self.current_step % self.learning_freq == 0:
+            self.agent.study()
+
+        self.current_step = self.current_step + 1

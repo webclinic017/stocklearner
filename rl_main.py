@@ -1,5 +1,6 @@
 from feed.bt_data import BTCSVBasicData
 from rl.agent.base import *
+from rl.agent.dqn_agent import DQNAgent
 from rl.env.cerebro_ext import RLExtCerebro
 
 episode = 5
@@ -7,7 +8,7 @@ data_path = "./test_data/stock/000002.csv"
 
 
 if __name__ == "__main__":
-    agent = RLAgent01()
+    agent = DQNAgent()
 
     for i in range(episode):
         print("#####################EPISODE " + str(i) + "###########################")

@@ -44,16 +44,19 @@ print(ary)
 # logger.warning("Something maybe fail.")
 # logger.info("Finish")
 
-import gym
-env = gym.make('MountainCar-v0')
-for i_episode in range(200):
-    observation = env.reset()
-    for t in range(1000):
-        env.render()
-        # print(observation)
-        action = env.action_space.sample()
-        # print(action)
-        observation, reward, done, info = env.step(action)
-        if done:
-            print("Episode finished after {} timesteps".format(t+1))
-            break
+# import gym
+# env = gym.make('MountainCar-v0')
+# for i_episode in range(200):
+#     observation = env.reset()
+#     for t in range(1000):
+#         env.render()
+#         # print(observation)
+#         action = env.action_space.sample()
+#         # print(action)
+#         observation, reward, done, info = env.step(action)
+#         if done:
+#             print("Episode finished after {} timesteps".format(t+1))
+#             break
+t_np = np.array([True]) + 0.
+
+print(t_np)

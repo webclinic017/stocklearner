@@ -35,7 +35,7 @@ class MLP(Network):
                     self.network = tf.layers.dense(self.network, n_units, activation=act, name=layer)
                     self.logger.info("Building Input Layer:Output Size =>" + str(n_units))
                 else:
-                    # TODO：1. modify dropout to user tf.layers.dropout
+                    # TODO：1. modify dropout to use tf.layers.dropout
                     # TODO: 2. add batch normalization
                     act = fn_util.get_act_fn(self.config.get(layer, "act_fn"))
                     self.network = tf.layers.dense(self.network, n_units, activation=act, name=layer)
