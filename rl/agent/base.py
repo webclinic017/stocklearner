@@ -89,7 +89,7 @@ class RLCommonStrategy(bt.Strategy):
 
     def _get_observation(self):
         # TODO:
-        return "", False
+        return None, False
 
     # As env.render(), but need to get observation and reward
     def next(self):
@@ -97,12 +97,12 @@ class RLCommonStrategy(bt.Strategy):
         self.log("Next Close, %.2f" % self.dataclose[0])
 
         # Fetch observation, do the rest thing first which should be done in step function
-        self.last_observation, self.done = self.next_observation
-        self.current_observation = self._get_observation()
+        self.last_observation = self.current_observation
+        self.current_observation, self.done = self._get_observation()
         self.reward = self._get_reward()
         self.agent.store(self.last_observation, self.action, self.reward, self.current_observation, self.done)
 
-        self.action = self.agent.choose_action(self.observation)
+        self.action = self.agent.choose_action(self.current_observation)
 
         if self.action == self.agent.Hold:
             pass

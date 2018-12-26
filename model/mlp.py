@@ -4,8 +4,10 @@ IRIS_BOUNDARIES = [0, 1]
 
 
 class MLP(Network):
-    def __init__(self, config_file):
+    def __init__(self, config_file, network_name=""):
         Network.__init__(self, config_file)
+
+        self._network_name = network_name
 
         self._init_hyper_param()
         self._init_network()
@@ -26,19 +28,19 @@ class MLP(Network):
                 n_units = self.config.getint(layer, "unit")
 
                 if layer == "Input":
-                    self.x = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=layer)
+                    self.x = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=self._network_name + layer)
                     self.logger.info("Building Input Layer:Input Size =>" + str(n_units))
                     self.network = self.x
 
                 elif layer == "Output":
-                    self.y_ = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=layer)
-                    self.network = tf.layers.dense(self.network, n_units, activation=act, name=layer)
+                    self.y_ = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=self._network_name + layer)
+                    self.network = tf.layers.dense(self.network, n_units, activation=act, name=self._network_name + layer)
                     self.logger.info("Building Input Layer:Output Size =>" + str(n_units))
                 else:
                     # TODO：1. modify dropout to use tf.layers.dropout
                     # TODO: 2. add batch normalization
                     act = fn_util.get_act_fn(self.config.get(layer, "act_fn"))
-                    self.network = tf.layers.dense(self.network, n_units, activation=act, name=layer)
+                    self.network = tf.layers.dense(self.network, n_units, activation=act, name=self._network_name + layer)
                     self.logger.info("Building Hidden Layer:Unit Size =>" + str(n_units))
 
                     if self.config.has_option(layer, "keep_prob"):

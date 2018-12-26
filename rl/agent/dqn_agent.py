@@ -11,8 +11,11 @@ class DQNAgent(RLBaseAgent):
                  gamma=1.0,
                  batch_size=32,
                  target_network_update_freq=500,
+                 learning_freq=200,
                  epsilon=0.9):
-        super(RLBaseAgent, self).__init__()
+
+        super(DQNAgent, self).__init__()
+
         self._replay_buffer = ReplayBuffer(buffer_size)
         self._gamma = gamma
         self._batch_size = batch_size
@@ -20,18 +23,24 @@ class DQNAgent(RLBaseAgent):
         self._epsilon = epsilon
         self._network_config_path = network_config_path
 
+        self.learning_freq = learning_freq
+        self.prediction_network = None
+        self.target_network = None
+
         self.build_dqn()
 
     def build_dqn(self):
         # TODO
-        self.prediction_newtork = model_util.get_model(self._network_config_path)
-        self.target_newtork = model_util.get_model(self._network_config_path)
+        self.prediction_network = model_util.get_model(self._network_config_path, "eval_network")
+        self.target_network = model_util.get_model(self._network_config_path, "target_network")
 
     def choose_action(self, s_t):
         if random.random() < self._epsilon:
             action = self.random_action()
         else:
-            action = self.q_action.eval({self.s_t: [s_t]})[0]
+            # TODO
+            # action = self.q_action.eval({self.s_t: [s_t]})[0]
+            action = self.random_action()
         return action
 
     def store(self, s_t, action, reward, s_t_1, done):

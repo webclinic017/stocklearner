@@ -6,9 +6,11 @@ from rl.env.cerebro_ext import RLExtCerebro
 episode = 5
 data_path = "./test_data/stock/000002.csv"
 
+network_config_path = "./config/stock_mlp_baseline.cls"
+
 
 if __name__ == "__main__":
-    agent = DQNAgent()
+    agent = DQNAgent(network_config_path)
 
     for i in range(episode):
         print("#####################EPISODE " + str(i) + "###########################")
