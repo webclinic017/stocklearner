@@ -11,6 +11,7 @@ class MLP(Network):
 
         self._init_hyper_param()
         self._init_network()
+        
         self._add_train_ops()
 
     def _init_hyper_param(self):

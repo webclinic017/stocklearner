@@ -2,8 +2,9 @@ from feed.bt_data import BTCSVBasicData
 from rl.agent.base import *
 from rl.agent.dqn_agent import DQNAgent
 from rl.env.cerebro_ext import RLExtCerebro
+import backtrader as bt
 
-episode = 5
+episode = 1
 data_path = "./test_data/stock/000002.csv"
 
 network_config_path = "./config/stock_mlp_baseline.cls"
@@ -33,6 +34,10 @@ if __name__ == "__main__":
         # Add the Data Feed to Cerebro
         cerebro.adddata(data)
 
+        # Add sharpe ratio analyzer to Cerebro
+        cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name="sp")
+        # cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
+
         # Add a FixedSize sizer according to the stake
         cerebro.addsizer(bt.sizers.FixedSize, stake=100)
 
@@ -45,5 +50,4 @@ if __name__ == "__main__":
         cerebro.run()
 
         print("Final Portfolio Value: %.2f" % cerebro.broker.getvalue())
-
         # cerebro.plot()

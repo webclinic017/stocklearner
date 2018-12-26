@@ -38,6 +38,9 @@ class RLCommonStrategy(bt.Strategy):
         self.buyprice = None
         self.buycomm = None
 
+        self.last_value = self.broker.get_cash()
+        self.current_value = 0.
+
         self.agent = self.env.getagent()
         self.last_observation = None
         self.current_observation = None
@@ -50,7 +53,7 @@ class RLCommonStrategy(bt.Strategy):
 
         # As env.step(), but next observation, reward and done will be given in next function.
     def notify_order(self, order):
-        self.log("notify_order " + str(order.status))
+        # self.log("notify_order " + str(order.status))
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
             return
@@ -83,11 +86,19 @@ class RLCommonStrategy(bt.Strategy):
         # Write down: no pending order
         self.order = None
 
-    def _get_reward(self):
-        # TODO:
-        return 0
+    def _get_reward(self, calculate_type="upl"):
+        reward = 0.
+        self.log("Last value " + str(self.last_value) + " current value: " + str(self.current_value))
+        if calculate_type == "upl":
+            reward = self.current_value - self.last_value
 
-    def _get_observation(self):
+        if calculate_type == "pct":
+            reward = round((self.current_value - self.last_value) / self.last_value, 10)
+
+        self.log("Reward: " + str(reward), doprint=True)
+        return reward
+
+    def _get_observation(self, date):
         # TODO:
         return None, False
 
@@ -95,11 +106,13 @@ class RLCommonStrategy(bt.Strategy):
     def next(self):
         # Simply log the closing price of the series from the reference
         self.log("Next Close, %.2f" % self.dataclose[0])
+        self.log("Broker value, %.2f" % self.broker.getvalue())
 
         # Fetch observation, do the rest thing first which should be done in step function
         self.last_observation = self.current_observation
-        self.current_observation, self.done = self._get_observation()
-        self.reward = self._get_reward()
+        self.current_value = round(self.broker.getvalue(), 2)
+        self.current_observation, self.done = self._get_observation(date=None)
+        self.reward = self._get_reward(calculate_type="pct")
         self.agent.store(self.last_observation, self.action, self.reward, self.current_observation, self.done)
 
         self.action = self.agent.choose_action(self.current_observation)
@@ -108,14 +121,14 @@ class RLCommonStrategy(bt.Strategy):
             pass
         elif self.action == self.agent.Buy:
             # BUY, BUY, BUY!!! (with all possible default parameters)
-            self.log("BUY CREATE, %.2f" % self.dataclose[0], True)
+            self.log("BUY CREATE, %.2f" % self.dataclose[0], doprint=True)
 
             # Keep track of the created order to avoid a 2nd order
             self.order = self.buy()
 
         elif self.action == self.agent.Sell:
             # SELL, SELL, SELL!!! (with all possible default parameters)
-            self.log("SELL CREATE, %.2f" % self.dataclose[0], True)
+            self.log("SELL CREATE, %.2f" % self.dataclose[0], doprint=True)
 
             # Keep track of the created order to avoid a 2nd order
             self.order = self.sell()
