@@ -7,6 +7,7 @@ import random
 class DQNAgent(RLBaseAgent):
     def __init__(self,
                  network_config_path,
+                 tf_sess,
                  buffer_size=10000,
                  gamma=1.0,
                  batch_size=32,
@@ -23,16 +24,17 @@ class DQNAgent(RLBaseAgent):
         self._epsilon = epsilon
         self._network_config_path = network_config_path
 
+        self.tf_sess = tf_sess
         self.learning_freq = learning_freq
-        self.prediction_network = None
-        self.target_network = None
+        self.p_network = None  # prediction network
+        self.t_network = None  # target network
 
         self.build_dqn()
 
     def build_dqn(self):
         # TODO
-        self.prediction_network = model_util.get_model(self._network_config_path, "eval_network")
-        self.target_network = model_util.get_model(self._network_config_path, "target_network")
+        self.p_network = model_util.get_model(self._network_config_path, "eval_")
+        self.t_network = model_util.get_model(self._network_config_path, "target_")
 
     def choose_action(self, s_t):
         if random.random() < self._epsilon:

@@ -6,6 +6,7 @@ class RLExtCerebro(bt.Cerebro):
         bt.Cerebro.__init__(self)
 
         self._agent = None
+        self._tf_sess = None
 
     def addagent(self, agent):
         self._agent = agent
