@@ -16,6 +16,15 @@ class RLBaseAgent:
     def choose_action(self, observation):
         raise NotImplementedError
 
+    def store(self):
+        raise NotImplementedError
+
+    def choose_action(self):
+        raise NotImplementedError
+
+    def study(self):
+        raise NotImplementedError
+
 
 class RLCommonStrategy(bt.Strategy):
     params = (
