@@ -6,6 +6,22 @@ import numpy as np
 import os, random
 
 
+class DQNConfig():
+    def __init__(self, **kwargs):
+        self.buffer_size = 1000
+        self.input_size = 5
+        self.l1_unit = 512
+        self.l2_unit = 256
+        self.l3_unit = 128
+        self.l4_unit = 64
+        self.action_space = 4
+        self.learning_rate = 0.0001
+        self.learning_rate_step = 100
+        self.learning_rate_decay_step = 5* 10000
+        self.learning_rate_decay = 0.96
+        self.checkpoint_dir = "chk"
+
+
 class DQNAgent(RLBaseAgent):
     def __init__(self, config, sess):
         super(DQNAgent, self).__init__()
@@ -124,7 +140,7 @@ class DQNAgent(RLBaseAgent):
             q_t_plus_1_with_pred_action = self.target_q_with_idx.eval({
             self.target_s_t: s_t_plus_1,
             self.target_q_idx: [[idx, pred_a] for idx, pred_a in enumerate(pred_action)]})
-            target_q_t = (1. - terminal) * self.discount * q_t_plus_1_with_pred_action + reward
+            target_q_t = (1. - terminal) * self.config.discount * q_t_plus_1_with_pred_action + reward
         else:
             q_t_plus_1 = self.target_q.eval({self.target_s_t: s_t_plus_1})
             terminal = np.array(terminal) + 0.
