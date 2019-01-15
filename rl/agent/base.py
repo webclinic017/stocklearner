@@ -46,11 +46,13 @@ class RLCommonStrategy(bt.Strategy):
         self.order = None
         self.buyprice = None
         self.buycomm = None
+        self.date = None
 
         self.last_value = self.broker.get_cash()
         self.current_value = 0.
 
         self.agent = self.env.getagent()
+        self.df, self.scaled_df = self.env.getdf()
         self.last_observation = None
         self.current_observation = None
         self.reward = 0
@@ -107,9 +109,32 @@ class RLCommonStrategy(bt.Strategy):
         self.log("Reward: " + str(reward), doprint=True)
         return reward
 
-    def _get_observation(self, date):
-        # TODO:
-        return None, False
+    def _get_observation(self, date, offset=0, need_scaled=False):
+        def _get_data(df):
+            max_idx = df.shape[0]
+            # print(max_idx)
+            idx = df.index.get_loc(date)
+            # print("index in _get_observation")
+            # print(idx)
+            if offset > 0:
+                raise IndexError
+            elif offset < 0:
+                offset + 1
+                df2 = df.iloc[idx + offset:idx + 1]
+            else:
+                df2 = df.loc[date]
+            done = False
+            if idx == max_idx:
+                done = True
+            return df2.values.tolist(), done
+
+        if need_scaled:
+            if self.scaled_df is None:
+                raise NotImplementedError
+            else:
+                return _get_data(self.scaled_df)
+        else:
+            return _get_data(self.df)
 
     # As env.render(), but need to get observation and reward
     def next(self):
@@ -117,10 +142,14 @@ class RLCommonStrategy(bt.Strategy):
         self.log("Next Close, %.2f" % self.dataclose[0])
         self.log("Broker value, %.2f" % self.broker.getvalue())
 
+        self.date = self.datas[0].datetime.date(0).strftime("%Y-%m-%d")
+        # print("date in next()")
+        # print(self.date)
+
         # Fetch observation, do the rest thing first which should be done in step function
         self.last_observation = self.current_observation
         self.current_value = round(self.broker.getvalue(), 2)
-        self.current_observation, self.done = self._get_observation(date=None)
+        self.current_observation, self.done = self._get_observation(date=self.date)
         self.reward = self._get_reward(calculate_type="pct")
         self.agent.store(self.last_observation, self.action, self.reward, self.current_observation, self.done)
 

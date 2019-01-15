@@ -8,6 +8,7 @@ import tensorflow as tf
 
 episode = 1
 data_path = "./test_data/stock/000002.csv"
+scaled_data_path = ""
 
 network_config_path = "./config/stock_mlp_baseline.cls"
 
@@ -38,6 +39,9 @@ if __name__ == "__main__":
 
             # Add the Data Feed to Cerebro
             cerebro.adddata(data)
+
+            # Add additional data frame
+            cerebro.adddf(data_path, columns=RLExtCerebro.BASIC_COLUMNS)
 
             # Add sharpe ratio analyzer to Cerebro
             cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name="sp")

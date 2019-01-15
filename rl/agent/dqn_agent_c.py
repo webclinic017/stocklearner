@@ -3,13 +3,14 @@ from rl.dqn.replay_buffer import ReplayBuffer
 from rl.ops import linear, clipped_error
 import tensorflow as tf
 import numpy as np
-import os, random
+import os
+import random
 
 
 class DQNConfig:
     def __init__(self, **kwargs):
         self.buffer_size = 1000
-        self.input_size = 5
+        self.input_size = 8
         self.l1_unit = 512
         self.l2_unit = 256
         self.l3_unit = 128
@@ -22,6 +23,7 @@ class DQNConfig:
         self.learning_rate_minimum = 0.00025
         self.checkpoint_dir = "chk"
         self.learning_freq = 100
+        self.batch_size = 32
 
 
 class DQNAgent(RLBaseAgent):
@@ -111,7 +113,7 @@ class DQNAgent(RLBaseAgent):
 
     def save_model(self, step=None):
         print(" [*] Saving checkpoints...")
-        model_name = type(self).__name__
+        # model_name = type(self).__name__
 
         if not os.path.exists(self.config.checkpoint_dir):
             os.makedirs(self.config.checkpoint_dir)
@@ -135,7 +137,7 @@ class DQNAgent(RLBaseAgent):
         pass
 
     def q_learning_mini_batch(self):
-        s_t, action, reward, s_t_plus_1, terminal = self.replay_buffer.sample()
+        s_t, action, reward, s_t_plus_1, terminal = self.replay_buffer.sample(self.config.batch_size)
 
         # t = time.time()
         if self.double_q:
@@ -185,5 +187,7 @@ class DQNAgent(RLBaseAgent):
         if random.random() < ep:
             action = random.randrange(self.config.action_size)
         else:
+            # print(s_t)
             action = self.q_action.eval({self.s_t: [s_t]})[0]
+        # print(action)
         return action
