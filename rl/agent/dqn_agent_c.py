@@ -6,7 +6,7 @@ import numpy as np
 import os, random
 
 
-class DQNConfig():
+class DQNConfig:
     def __init__(self, **kwargs):
         self.buffer_size = 1000
         self.input_size = 5
@@ -14,18 +14,21 @@ class DQNConfig():
         self.l2_unit = 256
         self.l3_unit = 128
         self.l4_unit = 64
-        self.action_space = 4
-        self.learning_rate = 0.0001
+        self.action_size = 4
+        self.learning_rate = 0.00025
         self.learning_rate_step = 100
-        self.learning_rate_decay_step = 5* 10000
+        self.learning_rate_decay_step = 5 * 10000
         self.learning_rate_decay = 0.96
+        self.learning_rate_minimum = 0.00025
         self.checkpoint_dir = "chk"
+        self.learning_freq = 100
 
 
 class DQNAgent(RLBaseAgent):
     def __init__(self, config, sess):
         super(DQNAgent, self).__init__()
 
+        self.sess = sess
         self.config = config
         self.replay_buffer = ReplayBuffer(self.config.buffer_size)
         self.saver = None
@@ -45,21 +48,21 @@ class DQNAgent(RLBaseAgent):
 
         with tf.variable_scope("prediction"):
             self.s_t = tf.placeholder(dtype=tf.float32, shape=[None, self.config.input_size], name="s_t")
-            self.l1, self.w["l1_w"], self.w["l1_w"] = linear(self.s_t, self.config.l1_unit, activation_fn, name="l1")
-            self.l2, self.w["l2_w"], self.w["l2_w"] = linear(self.l1, self.config.l2_unit, activation_fn, name="l2")
-            self.l3, self.w["l3_w"], self.w["l3_w"] = linear(self.l2, self.config.l3_unit, activation_fn, name="l3")
-            self.l4, self.w["l4_w"], self.w["l4_w"] = linear(self.l3, self.config.l4_unit, activation_fn, name="l4")
-            self.q, self.w['q_w'], self.w['q_b'] = linear(self.l4, self.config.action_space, name='q')
+            self.l1, self.w["l1_w"], self.w["l1_b"] = linear(self.s_t, self.config.l1_unit, activation_fn, name="l1")
+            self.l2, self.w["l2_w"], self.w["l2_b"] = linear(self.l1, self.config.l2_unit, activation_fn, name="l2")
+            self.l3, self.w["l3_w"], self.w["l3_b"] = linear(self.l2, self.config.l3_unit, activation_fn, name="l3")
+            self.l4, self.w["l4_w"], self.w["l4_b"] = linear(self.l3, self.config.l4_unit, activation_fn, name="l4")
+            self.q, self.w['q_w'], self.w['q_b'] = linear(self.l4, self.config.action_size, name='q')
 
-        self.q_action = tf.argmax(self.q, dimension=1)
+        self.q_action = tf.argmax(self.q, axis=1)
 
         with tf.variable_scope("target"):
             self.target_s_t = tf.placeholder(dtype=tf.float32, shape=[None, self.config.input_size], name="s_t")
-            self.target_l1, self.w["l1_w"], self.w["l1_w"] = linear(self.target_s_t, self.config.l1_unit, activation_fn, name="l1")
-            self.target_l2, self.w["l2_w"], self.w["l2_w"] = linear(self.target_l1, self.config.l2_unit, activation_fn, name="l2")
-            self.target_l3, self.w["l3_w"], self.w["l3_w"] = linear(self.target_l2, self.config.l3_unit, activation_fn, name="l3")
-            self.target_l4, self.w["l4_w"], self.w["l4_w"] = linear(self.target_l3, self.config.l4_unit, activation_fn, name="l4")
-            self.target_q, self.w['q_w'], self.w['q_b'] = linear(self.target_l4, self.config.action_size, name='target_q')
+            self.target_l1, self.t_w["l1_w"], self.t_w["l1_b"] = linear(self.target_s_t, self.config.l1_unit, activation_fn, name="l1")
+            self.target_l2, self.t_w["l2_w"], self.t_w["l2_b"] = linear(self.target_l1, self.config.l2_unit, activation_fn, name="l2")
+            self.target_l3, self.t_w["l3_w"], self.t_w["l3_b"] = linear(self.target_l2, self.config.l3_unit, activation_fn, name="l3")
+            self.target_l4, self.t_w["l4_w"], self.t_w["l4_b"] = linear(self.target_l3, self.config.l4_unit, activation_fn, name="l4")
+            self.target_q, self.t_w['q_w'], self.t_w['q_b'] = linear(self.target_l4, self.config.action_size, name='target_q')
 
         self.target_q_idx = tf.placeholder('int32', [None, None], 'outputs_idx')
         self.target_q_with_idx = tf.gather_nd(self.target_q, self.target_q_idx)
@@ -86,7 +89,7 @@ class DQNAgent(RLBaseAgent):
 
             self.loss = tf.reduce_mean(clipped_error(self.delta), name='loss')
             self.learning_rate_step = tf.placeholder('int64', None, name='learning_rate_step')
-            self.learning_rate_op = tf.maximum(self.learning_rate_minimum,
+            self.learning_rate_op = tf.maximum(self.config.learning_rate_minimum,
                                                tf.train.exponential_decay(
                                                    self.config.learning_rate,
                                                    self.config.learning_rate_step,
@@ -96,8 +99,9 @@ class DQNAgent(RLBaseAgent):
             self.optimizer = tf.train.RMSPropOptimizer(
                 self.learning_rate_op, momentum=0.95, epsilon=0.01).minimize(self.loss)
 
-        tf.initialize_all_variables().run()
-        self._saver = tf.train.Saver(self.w.values() + [self.step_op], max_to_keep=30)
+        # tf.initialize_all_variables().run()
+        tf.global_variables_initializer().run()
+        # self.saver = tf.train.Saver({"w": self.w.values(), "step_op": [self.step_op]}, max_to_keep=30)
         self.load_model()
         self.update_target_q_network()
 
@@ -159,25 +163,27 @@ class DQNAgent(RLBaseAgent):
         self.total_q += q_t.mean()
         self.update_count += 1
 
-    def store(self, observe, reward, action, terminal):
-        reward = max(self.min_reward, min(self.max_reward, reward))
+    def store(self, observe, reward, action, next_observe, terminal):
+        # reward = max(self.min_reward, min(self.max_reward, reward))
 
         # self.history.add(observe)
-        self.replay_buffer.add(observe, reward, action, terminal)
+        self.replay_buffer.add(observe, reward, action, next_observe, terminal)
 
-        if self.step > self.learn_start:
-            if self.step % self.train_frequency == 0:
-                self.q_learning_mini_batch()
-
-            if self.step % self.target_q_update_step == self.target_q_update_step - 1:
-                self.update_target_q_network()
+        # TODO: Check this purpose
+        # if self.step > self.learn_start:
+        #     if self.step % self.train_frequency == 0:
+        #         self.q_learning_mini_batch()
+        #
+        #     if self.step % self.target_q_update_step == self.target_q_update_step - 1:
+        #         self.update_target_q_network()
 
     def choose_action(self, s_t, test_ep=None):
-        ep = test_ep or (self.ep_end +
-                         max(0., (self.ep_start - self.ep_end)
-                             * (self.ep_end_t - max(0., self.step - self.learn_start)) / self.ep_end_t))
+        # ep = test_ep or (self.ep_end +
+        #                  max(0., (self.ep_start - self.ep_end)
+        #                      * (self.ep_end_t - max(0., self.step - self.learn_start)) / self.ep_end_t))
+        ep = 0.9
         if random.random() < ep:
-            action = random.randrange(self.env.action_size)
+            action = random.randrange(self.config.action_size)
         else:
             action = self.q_action.eval({self.s_t: [s_t]})[0]
         return action

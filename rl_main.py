@@ -1,6 +1,7 @@
 from feed.bt_data import BTCSVBasicData
 from rl.agent.base import *
-from rl.agent.dqn_agent import DQNAgent
+# from rl.agent.dqn_agent import DQNAgent
+from rl.agent.dqn_agent_c import DQNAgent, DQNConfig
 from rl.env.cerebro_ext import RLExtCerebro
 import backtrader as bt
 import tensorflow as tf
@@ -12,8 +13,10 @@ network_config_path = "./config/stock_mlp_baseline.cls"
 
 
 if __name__ == "__main__":
-    with tf.Session as sess:
-        agent = DQNAgent(network_config_path, sess)
+    with tf.Session() as sess:
+        # agent = DQNAgent(network_config_path, sess)
+        config = DQNConfig()
+        agent = DQNAgent(config, sess)
 
         for i in range(episode):
             print("#####################EPISODE " + str(i) + "###########################")
