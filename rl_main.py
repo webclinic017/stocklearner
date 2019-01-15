@@ -64,4 +64,4 @@ if __name__ == "__main__":
             # cerebro.plot()
 
             global_step = cerebro.getglobalstep()
-            print(global_step)
+            # print(global_step)

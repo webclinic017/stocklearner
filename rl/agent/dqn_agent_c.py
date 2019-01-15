@@ -150,7 +150,10 @@ class DQNAgent(RLBaseAgent):
     def q_learning_mini_batch(self, step):
         if len(self.replay_buffer) < self.config.batch_size:
             return
-        print(step)
+
+        # if step % 1000 == 0:
+        #     print(step)
+
         s_t, action, reward, s_t_plus_1, terminal = self.replay_buffer.sample(self.config.batch_size)
 
         # t = time.time()
@@ -167,8 +170,9 @@ class DQNAgent(RLBaseAgent):
             max_q_t_plus_1 = np.max(q_t_plus_1, axis=1)
             target_q_t = (1. - terminal) * self.config.discount * max_q_t_plus_1 + reward
 
-            # Removed summary and changed optimizer
-            _, q_t, loss = self.sess.run([self.optimizer, self.q, self.loss], {
+        # Removed summary and changed optimizer
+        assert type(step) == int, "Step is not int" + str(step)
+        _, q_t, loss = self.sess.run([self.optimizer, self.q, self.loss], {
             self.target_q_t: target_q_t,
             self.action: action,
             self.s_t: s_t,
@@ -181,6 +185,8 @@ class DQNAgent(RLBaseAgent):
         # self.update_count += 1
 
     def store(self, observe, reward, action, next_observe, terminal):
+        if observe is None or next_observe is None:
+            return
         self.replay_buffer.add(observe, reward, action, next_observe, terminal)
 
     def choose_action(self, s_t, test_ep=None):
