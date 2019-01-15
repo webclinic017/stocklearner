@@ -24,6 +24,11 @@ class DQNConfig:
         self.checkpoint_dir = "chk"
         self.learning_freq = 100
         self.batch_size = 32
+        self.target_q_update_step = 50
+        self.discount = 0.99
+        self.train_frequency = 4
+        self.learn_start = 32
+        self.double_q = False
 
 
 class DQNAgent(RLBaseAgent):
@@ -66,7 +71,7 @@ class DQNAgent(RLBaseAgent):
             self.target_l4, self.t_w["l4_w"], self.t_w["l4_b"] = linear(self.target_l3, self.config.l4_unit, activation_fn, name="l4")
             self.target_q, self.t_w['q_w'], self.t_w['q_b'] = linear(self.target_l4, self.config.action_size, name='target_q')
 
-        self.target_q_idx = tf.placeholder('int32', [None, None], 'outputs_idx')
+        self.target_q_idx = tf.placeholder(dtype=tf.int32, shape=[None, None], name='outputs_idx')
         self.target_q_with_idx = tf.gather_nd(self.target_q, self.target_q_idx)
 
         with tf.variable_scope('pred_to_target'):
@@ -74,13 +79,13 @@ class DQNAgent(RLBaseAgent):
             self.t_w_assign_op = {}
 
             for name in self.w.keys():
-                self.t_w_input[name] = tf.placeholder('float32', self.t_w[name].get_shape().as_list(), name=name)
+                self.t_w_input[name] = tf.placeholder(dtype=tf.float32, shape=self.t_w[name].get_shape().as_list(), name=name)
                 self.t_w_assign_op[name] = self.t_w[name].assign(self.t_w_input[name])
 
         # optimizer
         with tf.variable_scope('optimizer'):
-            self.target_q_t = tf.placeholder('float32', [None], name='target_q_t')
-            self.action = tf.placeholder('int64', [None], name='action')
+            self.target_q_t = tf.placeholder(dtype=tf.float32, shape=[None], name='target_q_t')
+            self.action = tf.placeholder(dtype=tf.int32, shape=[None], name='action')
 
             action_one_hot = tf.one_hot(self.action, self.config.action_size, 1.0, 0.0, name='action_one_hot')
             q_acted = tf.reduce_sum(self.q * action_one_hot, reduction_indices=1, name='q_acted')
@@ -90,7 +95,7 @@ class DQNAgent(RLBaseAgent):
             self.global_step = tf.Variable(0, trainable=False)
 
             self.loss = tf.reduce_mean(clipped_error(self.delta), name='loss')
-            self.learning_rate_step = tf.placeholder('int64', None, name='learning_rate_step')
+            self.learning_rate_step = tf.placeholder(dtype=tf.int32, shape=None, name='learning_rate_step')
             self.learning_rate_op = tf.maximum(self.config.learning_rate_minimum,
                                                tf.train.exponential_decay(
                                                    self.config.learning_rate,
@@ -100,6 +105,7 @@ class DQNAgent(RLBaseAgent):
                                                    staircase=True))
             self.optimizer = tf.train.RMSPropOptimizer(
                 self.learning_rate_op, momentum=0.95, epsilon=0.01).minimize(self.loss)
+            # self.optimizer = tf.train.AdagradOptimizer(self.config.learning_rate).minimize(self.loss)
 
         # tf.initialize_all_variables().run()
         tf.global_variables_initializer().run()
@@ -133,14 +139,22 @@ class DQNAgent(RLBaseAgent):
             print(" [!] Load FAILED: %s" % self.config.checkpoint_dir)
             return False
 
-    def study(self):
-        pass
+    def study(self, global_step):
+        if global_step > self.config.learn_start:
+            if global_step % self.config.train_frequency == 0:
+                self.q_learning_mini_batch(global_step)
 
-    def q_learning_mini_batch(self):
+            if global_step % self.config.target_q_update_step == 0:
+                self.update_target_q_network()
+
+    def q_learning_mini_batch(self, step):
+        if len(self.replay_buffer) < self.config.batch_size:
+            return
+        print(step)
         s_t, action, reward, s_t_plus_1, terminal = self.replay_buffer.sample(self.config.batch_size)
 
         # t = time.time()
-        if self.double_q:
+        if self.config.double_q:
             # Double Q-learning
             pred_action = self.q_action.eval({self.s_t: s_t_plus_1})
             q_t_plus_1_with_pred_action = self.target_q_with_idx.eval({
@@ -151,33 +165,23 @@ class DQNAgent(RLBaseAgent):
             q_t_plus_1 = self.target_q.eval({self.target_s_t: s_t_plus_1})
             terminal = np.array(terminal) + 0.
             max_q_t_plus_1 = np.max(q_t_plus_1, axis=1)
-            target_q_t = (1. - terminal) * self.discount * max_q_t_plus_1 + reward
+            target_q_t = (1. - terminal) * self.config.discount * max_q_t_plus_1 + reward
 
-            _, q_t, loss, summary_str = self.sess.run([self.optim, self.q, self.loss, self.q_summary], {
+            # Removed summary and changed optimizer
+            _, q_t, loss = self.sess.run([self.optimizer, self.q, self.loss], {
             self.target_q_t: target_q_t,
             self.action: action,
             self.s_t: s_t,
-            self.learning_rate_step: self.step,
+            self.learning_rate_step: step,
             })
 
         # self.writer.add_summary(summary_str, self.step)
-        self.total_loss += loss
-        self.total_q += q_t.mean()
-        self.update_count += 1
+        # self.total_loss += loss
+        # self.total_q += q_t.mean()
+        # self.update_count += 1
 
     def store(self, observe, reward, action, next_observe, terminal):
-        # reward = max(self.min_reward, min(self.max_reward, reward))
-
-        # self.history.add(observe)
         self.replay_buffer.add(observe, reward, action, next_observe, terminal)
-
-        # TODO: Check this purpose
-        # if self.step > self.learn_start:
-        #     if self.step % self.train_frequency == 0:
-        #         self.q_learning_mini_batch()
-        #
-        #     if self.step % self.target_q_update_step == self.target_q_update_step - 1:
-        #         self.update_target_q_network()
 
     def choose_action(self, s_t, test_ep=None):
         # ep = test_ep or (self.ep_end +

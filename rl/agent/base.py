@@ -59,7 +59,7 @@ class RLCommonStrategy(bt.Strategy):
         self.action = None
         self.done = False
 
-        self.current_step = 0
+        # self.global_step = 0
         self.learning_freq = self.agent.config.learning_freq
 
         # As env.step(), but next observation, reward and done will be given in next function.
@@ -106,7 +106,7 @@ class RLCommonStrategy(bt.Strategy):
         if calculate_type == "pct":
             reward = round((self.current_value - self.last_value) / self.last_value, 10)
 
-        self.log("Reward: " + str(reward), doprint=True)
+        self.log("Reward: " + str(reward))
         return reward
 
     def _get_observation(self, date, offset=0, need_scaled=False):
@@ -159,19 +159,22 @@ class RLCommonStrategy(bt.Strategy):
             pass
         elif self.action == self.agent.Buy:
             # BUY, BUY, BUY!!! (with all possible default parameters)
-            self.log("BUY CREATE, %.2f" % self.dataclose[0], doprint=True)
+            self.log("BUY CREATE, %.2f" % self.dataclose[0], doprint=False)
 
             # Keep track of the created order to avoid a 2nd order
             self.order = self.buy()
 
         elif self.action == self.agent.Sell:
             # SELL, SELL, SELL!!! (with all possible default parameters)
-            self.log("SELL CREATE, %.2f" % self.dataclose[0], doprint=True)
+            self.log("SELL CREATE, %.2f" % self.dataclose[0], doprint=False)
 
             # Keep track of the created order to avoid a 2nd order
             self.order = self.sell()
 
-        if self.current_step % self.learning_freq == 0:
-            self.agent.study()
+        global_step = self.env.getglobalstep()
 
-        self.current_step = self.current_step + 1
+        if global_step % self.learning_freq == 0:
+            self.agent.study(global_step)
+
+        self.env.addglobalstep(global_step + 1)
+

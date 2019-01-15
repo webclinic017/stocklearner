@@ -6,7 +6,7 @@ from rl.env.cerebro_ext import RLExtCerebro
 import backtrader as bt
 import tensorflow as tf
 
-episode = 1
+episode = 50
 data_path = "./test_data/stock/000002.csv"
 scaled_data_path = ""
 
@@ -18,6 +18,7 @@ if __name__ == "__main__":
         # agent = DQNAgent(network_config_path, sess)
         config = DQNConfig()
         agent = DQNAgent(config, sess)
+        global_step = 0
 
         for i in range(episode):
             print("#####################EPISODE " + str(i) + "###########################")
@@ -42,6 +43,7 @@ if __name__ == "__main__":
 
             # Add additional data frame
             cerebro.adddf(data_path, columns=RLExtCerebro.BASIC_COLUMNS)
+            cerebro.addglobalstep(global_step)
 
             # Add sharpe ratio analyzer to Cerebro
             cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name="sp")
@@ -60,3 +62,6 @@ if __name__ == "__main__":
 
             print("Final Portfolio Value: %.2f" % cerebro.broker.getvalue())
             # cerebro.plot()
+
+            global_step = cerebro.getglobalstep()
+            print(global_step)

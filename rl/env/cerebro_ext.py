@@ -13,6 +13,7 @@ class RLExtCerebro(bt.Cerebro):
         self._tf_sess = None
         self._df = None
         self._scaled_df = None
+        self._global_step = 0
 
     def addagent(self, agent):
         self._agent = agent
@@ -34,6 +35,12 @@ class RLExtCerebro(bt.Cerebro):
 
     def addscaleddf(self, data_path, columns):
         self._scaled_df = self._load_pd(data_path, columns)
+
+    def addglobalstep(self, step):
+        self._global_step = step
+
+    def getglobalstep(self):
+        return self._global_step
 
     def _load_pd(self, data_path, columns):
         df = pd.read_csv(data_path, header=None)
