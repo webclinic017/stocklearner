@@ -8,7 +8,7 @@ from util import log_util
 CONFIG_FILE_PATH = "./app.config_file"
 
 
-logger = log_util.get_file_logger("main.py", "main.log")
+logger = log_util.get_file_logger("train_ops.py", "main.log")
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()
