@@ -13,7 +13,7 @@ episode = 50
 data_dir = "D:\\output\\"
 # data_path = "./test_data/stock/000002.csv"
 # scaled_data_path = ""
-network_config_path = "./config/stock_mlp_baseline.cls"
+network_config_path = "./config_file/stock_mlp_baseline.cls"
 
 
 def get_data_files(file_list):

@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # dataset_train = iris.train_input_fn(train_x, train_y)
     # dataset_eval = iris.eval_input_fn(test_x, test_y)
     #
-    # my_config_file = "/Users/alex/Desktop/StockLearner/config/iris_mlp_baseline.cls"
+    # my_config_file = "/Users/alex/Desktop/StockLearner/config_file/iris_mlp_baseline.cls"
     # mlp = MLP(config_file=my_config_file, model_name="iris_baseline")
     # mlp.train_by_dataset(dataset_train)
     # mlp.eval_by_dataset(dataset_eval)
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # mlp.predict(predict_data)
 
     from feed.csv_data import csv_input_fn
-    config_file_path = "../config/stock_mlp_baseline.cls"
+    config_file_path = "../config_file/stock_mlp_baseline.cls"
     training_data_path = "D:\\t"
     training_dataset = csv_input_fn(training_data_path)
 

@@ -6,7 +6,7 @@ from os import listdir
 from util import model_util
 from feed import csv_data as stock_data
 
-CONFIG_FILE_PATH = "./app.config"
+CONFIG_FILE_PATH = "./app.config_file"
 
 
 def func(msg, t):
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     i = 1
     for config_file in config_file_list:
         # msg = "hello %d" %(i)
-        print("Current config file is: " + config_file)
+        print("Current config_file file is: " + config_file)
         # pool.apply_async(func, (config_file, i))
         pool.apply_async(machine_learning, (config_file, "", ""))
         i = i + 1

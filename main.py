@@ -5,7 +5,7 @@ from os.path import join
 from os import listdir
 from util import log_util
 
-CONFIG_FILE_PATH = "./app.config"
+CONFIG_FILE_PATH = "./app.config_file"
 
 
 logger = log_util.get_file_logger("main.py", "main.log")
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     eval_dataset = stock_data.csv_input_fn(eval_data_path)
 
     for config_file in config_file_list:
-        logger.info("Current config file is: " + config_file)
+        logger.info("Current config_file file is: " + config_file)
         try:
             model = model_util.get_model(config_file)
             model.train(train_dataset)

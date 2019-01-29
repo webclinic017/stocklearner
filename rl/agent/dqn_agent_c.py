@@ -132,7 +132,7 @@ class DQNAgent(RLBaseAgent):
                                                    staircase=True))
             self.optimizer = tf.train.RMSPropOptimizer(
                 self.learning_rate_op, momentum=0.95, epsilon=0.01).minimize(self.loss)
-            # self.optimizer = tf.train.AdagradOptimizer(self.config.learning_rate).minimize(self.loss)
+            # self.optimizer = tf.train.AdagradOptimizer(self.config_file.learning_rate).minimize(self.loss)
 
         # tf.initialize_all_variables().run()
         tf.global_variables_initializer().run()
