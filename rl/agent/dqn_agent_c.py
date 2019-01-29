@@ -6,22 +6,38 @@ import numpy as np
 import os
 import random
 
+# TODO: 1. configure parameters
+#       2. Double Q
+#       3. Duel DQN
+#       4. Prioritized Replay Buffer
+#       3. Summary
+#       4. Checkpoint - DONE
+#       5. Copy network vars from target to prediction
+#       6. learning rate ops
+
 
 class DQNConfig:
     def __init__(self, **kwargs):
         self.buffer_size = 1000
+
         self.input_size = 8
         self.l1_unit = 512
         self.l2_unit = 256
         self.l3_unit = 128
         self.l4_unit = 64
+
         self.action_size = 4
+
         self.learning_rate = 0.00025
         self.learning_rate_step = 100
         self.learning_rate_decay_step = 5 * 10000
         self.learning_rate_decay = 0.96
         self.learning_rate_minimum = 0.00025
+
         self.checkpoint_dir = "chk"
+        self.max_to_save = 5
+        self.save_frequency = 1000
+
         self.learning_freq = 100
         self.batch_size = 32
         self.target_q_update_step = 50
@@ -29,6 +45,9 @@ class DQNConfig:
         self.train_frequency = 4
         self.learn_start = 32
         self.double_q = False
+
+        self.summary_log_dir = "summary"
+        self.enable_summary = False
 
 
 class DQNAgent(RLBaseAgent):
@@ -42,13 +61,20 @@ class DQNAgent(RLBaseAgent):
 
         with tf.variable_scope("step"):
             self.step_op = tf.Variable(0, trainable=False, name="step")
-            self.step_input = tf.placeholder(dtype=tf.int32, shape=None, name="step_inplut")
+            self.step_input = tf.placeholder(dtype=tf.int32, shape=None, name="step_input")
             self.step_assign_op = self.step_op.assign(self.step_input)
 
         self.w = {}
         self.t_w = {}
 
         self.build_dqn()
+
+        self.saver = tf.train.Saver(max_to_keep=self.config.max_to_save)
+
+        if self.config.enable_summary:
+            self.writer = tf.summary.FileWriter(self.config.summary_log_dir, sess.graph)
+        else:
+            self.writer = None
 
     def build_dqn(self):
         activation_fn = tf.nn.relu6
@@ -79,6 +105,7 @@ class DQNAgent(RLBaseAgent):
             self.t_w_assign_op = {}
 
             for name in self.w.keys():
+                # prediction -> l1_w,l1_b, l2_w, l2_b
                 self.t_w_input[name] = tf.placeholder(dtype=tf.float32, shape=self.t_w[name].get_shape().as_list(), name=name)
                 self.t_w_assign_op[name] = self.t_w[name].assign(self.t_w_input[name])
 
@@ -117,7 +144,7 @@ class DQNAgent(RLBaseAgent):
         for name in self.w.keys():
             self.t_w_assign_op[name].eval({self.t_w_input[name]: self.w[name].eval()})
 
-    def save_model(self, step=None):
+    def save_model(self, step):
         print(" [*] Saving checkpoints...")
         # model_name = type(self).__name__
 
@@ -147,16 +174,15 @@ class DQNAgent(RLBaseAgent):
             if global_step % self.config.target_q_update_step == 0:
                 self.update_target_q_network()
 
+            if global_step % self.config.save_frequency == 0:
+                self.save_model(global_step)
+
     def q_learning_mini_batch(self, step):
         if len(self.replay_buffer) < self.config.batch_size:
             return
 
-        # if step % 1000 == 0:
-        #     print(step)
-
         s_t, action, reward, s_t_plus_1, terminal = self.replay_buffer.sample(self.config.batch_size)
 
-        # t = time.time()
         if self.config.double_q:
             # Double Q-learning
             pred_action = self.q_action.eval({self.s_t: s_t_plus_1})
@@ -170,8 +196,6 @@ class DQNAgent(RLBaseAgent):
             max_q_t_plus_1 = np.max(q_t_plus_1, axis=1)
             target_q_t = (1. - terminal) * self.config.discount * max_q_t_plus_1 + reward
 
-        # Removed summary and changed optimizer
-        assert type(step) == int, "Step is not int" + str(step)
         _, q_t, loss = self.sess.run([self.optimizer, self.q, self.loss], {
             self.target_q_t: target_q_t,
             self.action: action,
@@ -197,7 +221,5 @@ class DQNAgent(RLBaseAgent):
         if random.random() < ep:
             action = random.randrange(self.config.action_size)
         else:
-            # print(s_t)
             action = self.q_action.eval({self.s_t: [s_t]})[0]
-        # print(action)
         return action
