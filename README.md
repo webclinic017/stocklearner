@@ -27,4 +27,17 @@ Known issue:
 Multiprocessing has issues, so only place one model config file and train one time. This will be fixed in future
 
 TODO:
-Will add batch normalization in MLP soon
+0. Will add batch normalization in MLP soon
+1. Create new config folder for config classes，rename current config folder to config_file and only store for .ini files
+2. Extract train and predict ops from model classes, create new train_ops for them
+3. Refactor for DQN
+   3.1 Create config class for DQN
+   3.2 Add double Q learning
+   3.3 Add Duel DQN
+   3.4 Add Prioritized Replay Buffer
+   3.5 Add Tenorboard summary
+   3.6 Add learning rate ops
+4. Create A3C for deep reinforcement learning
+5. Use eager execution to support TensorFlow2.0 in future
+
+
