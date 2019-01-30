@@ -35,5 +35,5 @@ class TrainOps:
     def train(self, dataset):
         raise NotImplementedError
 
-    def predict(self):
+    def eval(self, batch_x):
         raise NotImplementedError

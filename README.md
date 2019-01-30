@@ -18,7 +18,7 @@ Reinforcement learning:
 Usage:
 1. Modify app.config to set the training data path, eval data path and model config path
 2. Create or modify your own model config ini file and put it into the model config path
-3. Run train_ops.py for supervised learning and run rl_ops for reinforcement learning
+3. Run sl_ops.py for supervised learning and run rl_ops for reinforcement learning
 
 Models:
 So far MLP and RNN(LSTM) only

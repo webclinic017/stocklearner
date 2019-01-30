@@ -10,8 +10,6 @@ def md5(filename):
     return hash_md5.hexdigest()
 
 if __name__ == "__main__":
-    from test import iris
-
     # (train_x, train_y), (test_x, test_y) = iris.load_data()
     # dataset_train = iris.train_input_fn(train_x, train_y)
     # dataset_eval = iris.eval_input_fn(test_x, test_y)
