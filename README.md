@@ -5,17 +5,23 @@ Purpose:
 User machine learning to perdict stock price
 
 Requirements:
-tensorflow >= 1.8.0
-pandas >= 0.23.2
-numpy >= 0.23.2
+
+Supervised learning:
+- tensorflow >= 1.8.0
+- pandas >= 0.23.2
+- numpy >= 0.23.2
+
+Reinforcement learning:
+- all in supervised learning
+- backtrader >= 1.9.59.122
 
 Usage:
 1. Modify app.config to set the training data path, eval data path and model config path
 2. Create or modify your own model config ini file and put it into the model config path
-3. Run main.py
+3. Run train_ops.py for supervised learning and run rl_ops for reinforcement learning
 
 Models:
-We currently support MLP and LSTM only
+So far MLP and RNN(LSTM) only
 
 Data:
 Please use CSV file with columns as below:
