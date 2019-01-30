@@ -34,9 +34,9 @@ class DQNConfig:
         self.learning_rate_decay = 0.96
         self.learning_rate_minimum = 0.00025
 
-        self.checkpoint_dir = "chk"
+        self.checkpoint_dir = "./chk/"
         self.max_to_save = 5
-        self.save_frequency = 1000
+        self.save_frequency = 10000
 
         self.learning_freq = 100
         self.batch_size = 32
@@ -68,6 +68,9 @@ class DQNAgent(RLBaseAgent):
         self.t_w = {}
 
         self.build_dqn()
+
+        if not os.path.exists(self.config.checkpoint_dir):
+            os.makedirs(self.config.checkpoint_dir)
 
         self.saver = tf.train.Saver(max_to_keep=self.config.max_to_save)
 
@@ -147,9 +150,6 @@ class DQNAgent(RLBaseAgent):
     def save_model(self, step):
         print(" [*] Saving checkpoints...")
         # model_name = type(self).__name__
-
-        if not os.path.exists(self.config.checkpoint_dir):
-            os.makedirs(self.config.checkpoint_dir)
         self.saver.save(self.sess, self.config.checkpoint_dir, global_step=step)
 
     def load_model(self):
@@ -158,6 +158,7 @@ class DQNAgent(RLBaseAgent):
         ckpt = tf.train.get_checkpoint_state(self.config.checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
             ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
+            print(ckpt_name)
             fname = os.path.join(self.config.checkpoint_dir, ckpt_name)
             self.saver.restore(self.sess, fname)
             print(" [*] Load SUCCESS: %s" % fname)

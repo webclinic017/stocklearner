@@ -10,7 +10,7 @@ import tensorflow as tf
 import random
 
 episode = 50
-data_dir = "D:\\output\\"
+data_dir = "D:\\Output\\Train\\"
 # data_path = "./test_data/stock/000002.csv"
 # scaled_data_path = ""
 network_config_path = "./config_file/stock_mlp_baseline.cls"
@@ -18,13 +18,13 @@ network_config_path = "./config_file/stock_mlp_baseline.cls"
 
 def get_data_files(file_list):
     index = random.randint(0, len(file_list) - 1)
-    sub_path = join(data_dir, file_list[index])
-    csv_files = [join(sub_path, f) for f in listdir(sub_path) if f != ".DS_Store"]
-    return csv_files
+    csv_file = join(data_dir, file_list[index])
+    scaled_csv_file = join(data_dir, file_list[index].replace(".csv", "_s.csv"))
+    return csv_file, scaled_csv_file
 
 
 if __name__ == "__main__":
-    data_files = listdir(data_dir)
+    data_files = [f for f in listdir(data_dir) if f != ".DS_Store" and "_s" not in f]
 
     with tf.Session() as sess:
         # agent = DQNAgent(network_config_path, sess)
@@ -35,8 +35,9 @@ if __name__ == "__main__":
         for i in range(episode):
             print("#####################EPISODE " + str(i) + "###########################")
 
-            data_path = get_data_files(data_files)[0]
+            data_path, scaled_data_path = get_data_files(data_files)
             print("Current file is: " + data_path)
+            print("Related scaled file is: " + scaled_data_path)
 
             cerebro = RLExtCerebro()
 
@@ -58,6 +59,7 @@ if __name__ == "__main__":
 
             # Add additional data frame
             cerebro.adddf(data_path, columns=RLExtCerebro.BASIC_COLUMNS)
+            cerebro.addscaleddf(scaled_data_path, columns=RLExtCerebro.BASIC_COLUMNS)
             cerebro.addglobalstep(global_step)
 
             # Add sharpe ratio analyzer to Cerebro

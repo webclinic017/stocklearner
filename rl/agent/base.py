@@ -109,7 +109,7 @@ class RLCommonStrategy(bt.Strategy):
         self.log("Reward: " + str(reward))
         return reward
 
-    def _get_observation(self, date, offset=0, need_scaled=False):
+    def _get_observation(self, date, offset=0, scaled_data=False):
         def _get_data(df):
             max_idx = df.shape[0]
             # print(max_idx)
@@ -128,7 +128,7 @@ class RLCommonStrategy(bt.Strategy):
                 done = True
             return df2.values.tolist(), done
 
-        if need_scaled:
+        if scaled_data:
             if self.scaled_df is None:
                 raise NotImplementedError
             else:
@@ -149,7 +149,7 @@ class RLCommonStrategy(bt.Strategy):
         # Fetch observation, do the rest thing first which should be done in step function
         self.last_observation = self.current_observation
         self.current_value = round(self.broker.getvalue(), 2)
-        self.current_observation, self.done = self._get_observation(date=self.date)
+        self.current_observation, self.done = self._get_observation(date=self.date, scaled_data=True)
         self.reward = self._get_reward(calculate_type="pct")
         self.agent.store(self.last_observation, self.action, self.reward, self.current_observation, self.done)
 
