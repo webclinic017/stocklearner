@@ -70,7 +70,7 @@ class TrainOps:
             raise ValueError
 
         if self.network.model_type == "RNN":
-            self.dataset = self.dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.time_steps * self.batch_size))
+            self.dataset = self.dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.network.time_steps * self.batch_size))
             # dataset = dataset.batch(self.batch_size * self.time_steps, drop_remainder= True) # available in tf 1.10
         else:
             self.dataset = self.dataset.batch(self.batch_size)
@@ -114,8 +114,8 @@ class TrainOps:
                     batch_ys = raw_ys
 
                 if self.network.model_type == "RNN":
-                    batch_xs = batch_xs.reshape((-1, self.time_steps, self.input_size))
-                    batch_ys = dl_util.rnn_output_split(batch_ys, self.time_steps, self.output_size)
+                    batch_xs = batch_xs.reshape((-1, self.network.time_steps, self.network.input_size))
+                    batch_ys = dl_util.rnn_output_split(batch_ys, self.network.time_steps, self.network.output_size)
 
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
@@ -167,16 +167,24 @@ class TrainOps:
 
 if __name__ == "__main__":
     from model.mlp import MLP
+    from model.rnn import RNN
 
-    network_config_file = "../config_file/stock_mlp_baseline.cls"
-    data_config_file = "../config_file/stock_mlp_baseline_dataset.config"
-    train_ops_config_file = "../config_file/stock_mlp_baseline_train_ops.config"
+    # network_config_file = "../config_file/stock_mlp_baseline.cls"
+    # data_config_file = "../config_file/stock_mlp_baseline_dataset.config"
+    # train_ops_config_file = "../config_file/stock_mlp_baseline_train_ops.config"
+
+    network_config_file = "../config_file/stock_rnn_baseline.cls"
+    data_config_file = "../config_file/stock_rnn_baseline_dataset.config"
+    train_ops_config_file = "../config_file/stock_rnn_baseline_train_ops.config"
+
     training_data_path = "D:\\Train\\"
 
     train_dataset = stock_data.csv_input_fn(training_data_path)
-    mlp = MLP(network_config_file, network_name="mlp_testing")
+    # mlp = MLP(network_config_file, network_name="mlp_testing")
+    rnn = RNN(network_config_file, network_name="rnn_testing")
     train_ops = TrainOps("train_testing")
-    train_ops.add_network(mlp)
+    # train_ops.add_network(mlp)
+    train_ops.add_network(rnn)
     train_ops.add_dataset(train_dataset, data_config_file)
     train_ops.add_train_ops(train_ops_config_file)
 
