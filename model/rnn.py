@@ -13,7 +13,7 @@ class RNN(Network):
 
     def __init_network(self):
         self.layers = self.config.sections()
-        self.layers.remove("model")
+        self.layers.remove("network")
         self.layers.remove("input")
         self.layers.remove("output")
 

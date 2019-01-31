@@ -163,29 +163,3 @@ class TrainOps:
 
     def eval(self, batch_x):
         raise NotImplementedError
-
-
-if __name__ == "__main__":
-    from model.mlp import MLP
-    from model.rnn import RNN
-
-    # network_config_file = "../config_file/stock_mlp_baseline.cls"
-    # data_config_file = "../config_file/stock_mlp_baseline_dataset.config"
-    # train_ops_config_file = "../config_file/stock_mlp_baseline_train_ops.config"
-
-    network_config_file = "../config_file/stock_rnn_baseline.cls"
-    data_config_file = "../config_file/stock_rnn_baseline_dataset.config"
-    train_ops_config_file = "../config_file/stock_rnn_baseline_train_ops.config"
-
-    training_data_path = "D:\\Train\\"
-
-    train_dataset = stock_data.csv_input_fn(training_data_path)
-    # mlp = MLP(network_config_file, network_name="mlp_testing")
-    rnn = RNN(network_config_file, network_name="rnn_testing")
-    train_ops = TrainOps("train_testing")
-    # train_ops.add_network(mlp)
-    train_ops.add_network(rnn)
-    train_ops.add_dataset(train_dataset, data_config_file)
-    train_ops.add_train_ops(train_ops_config_file)
-
-    train_ops.train()

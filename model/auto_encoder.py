@@ -11,7 +11,7 @@ class AutoEncoder(Network):
 
     def __init_network(self):
         self.layers = self.config.sections()
-        self.layers.remove("model")
+        self.layers.remove("network")
 
         for layer in self.layers:
             n_units = self.config.getint(layer, "unit")

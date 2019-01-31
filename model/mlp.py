@@ -16,7 +16,7 @@ class MLP(Network):
 
     def __init_network(self):
         self.layers = self.config.sections()
-        self.layers.remove("model")
+        self.layers.remove("network")
 
         with tf.name_scope(self.network_name):
             for layer in self.layers:

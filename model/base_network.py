@@ -8,7 +8,7 @@ class Network:
         self.config_file = config_file
         self.config = configparser.ConfigParser()
         self.config.read(self.config_file)
-        self.model_type = self.config.get("model", "type")
+        self.model_type = self.config.get("network", "type")
 
         self.logger = log_util.get_file_logger("network.py", "network.log")
 

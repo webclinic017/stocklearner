@@ -1,4 +1,4 @@
-[model]
+[network]
 type = AutoEncoder
 
 [input]

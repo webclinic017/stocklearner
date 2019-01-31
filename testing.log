@@ -1,0 +1,12 @@
+2019-01-31 22:31:36,996 - testing - INFO - Step 0: cost is 2.0040252
+2019-01-31 22:31:36,996 - testing - INFO - Step 0: cost is 2.0040252
+2019-01-31 22:31:37,027 - testing - INFO - Accuracy is: 0.395
+2019-01-31 22:31:37,027 - testing - INFO - Accuracy is: 0.395
+2019-01-31 22:31:39,778 - testing - INFO - Step 100: cost is 2.0197086
+2019-01-31 22:31:39,778 - testing - INFO - Step 100: cost is 2.0197086
+2019-01-31 22:31:39,778 - testing - INFO - Accuracy is: 0.33
+2019-01-31 22:31:39,778 - testing - INFO - Accuracy is: 0.33
+2019-01-31 22:31:42,135 - testing - INFO - Step 200: cost is 1.9404807
+2019-01-31 22:31:42,135 - testing - INFO - Step 200: cost is 1.9404807
+2019-01-31 22:31:42,135 - testing - INFO - Accuracy is: 0.355
+2019-01-31 22:31:42,135 - testing - INFO - Accuracy is: 0.355
