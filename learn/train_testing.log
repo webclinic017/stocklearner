@@ -1,0 +1,32 @@
+2019-01-31 21:38:09,082 - train_testing - INFO - Step 0: cost is 2.081806
+2019-01-31 21:38:09,082 - train_testing - INFO - Step 0: cost is 2.081806
+2019-01-31 21:38:09,114 - train_testing - INFO - Accuracy is: 0.18
+2019-01-31 21:38:09,114 - train_testing - INFO - Accuracy is: 0.18
+2019-01-31 21:38:12,192 - train_testing - INFO - Step 100: cost is 2.0332193
+2019-01-31 21:38:12,192 - train_testing - INFO - Step 100: cost is 2.0332193
+2019-01-31 21:38:12,192 - train_testing - INFO - Accuracy is: 0.32
+2019-01-31 21:38:12,192 - train_testing - INFO - Accuracy is: 0.32
+2019-01-31 21:38:15,864 - train_testing - INFO - Step 200: cost is 1.940256
+2019-01-31 21:38:15,864 - train_testing - INFO - Step 200: cost is 1.940256
+2019-01-31 21:38:15,864 - train_testing - INFO - Accuracy is: 0.345
+2019-01-31 21:38:15,864 - train_testing - INFO - Accuracy is: 0.345
+2019-01-31 21:38:18,896 - train_testing - INFO - Step 300: cost is 2.127736
+2019-01-31 21:38:18,896 - train_testing - INFO - Step 300: cost is 2.127736
+2019-01-31 21:38:18,896 - train_testing - INFO - Accuracy is: 0.18
+2019-01-31 21:38:18,896 - train_testing - INFO - Accuracy is: 0.18
+2019-01-31 21:38:21,193 - train_testing - INFO - Step 400: cost is 1.835538
+2019-01-31 21:38:21,193 - train_testing - INFO - Step 400: cost is 1.835538
+2019-01-31 21:38:21,193 - train_testing - INFO - Accuracy is: 0.385
+2019-01-31 21:38:21,193 - train_testing - INFO - Accuracy is: 0.385
+2019-01-31 21:38:23,677 - train_testing - INFO - Step 500: cost is 1.6366757
+2019-01-31 21:38:23,677 - train_testing - INFO - Step 500: cost is 1.6366757
+2019-01-31 21:38:23,677 - train_testing - INFO - Accuracy is: 0.305
+2019-01-31 21:38:23,677 - train_testing - INFO - Accuracy is: 0.305
+2019-01-31 21:38:25,896 - train_testing - INFO - Step 600: cost is 1.6562539
+2019-01-31 21:38:25,896 - train_testing - INFO - Step 600: cost is 1.6562539
+2019-01-31 21:38:25,896 - train_testing - INFO - Accuracy is: 0.285
+2019-01-31 21:38:25,896 - train_testing - INFO - Accuracy is: 0.285
+2019-01-31 21:38:27,943 - train_testing - INFO - Step 700: cost is 1.5274343
+2019-01-31 21:38:27,943 - train_testing - INFO - Step 700: cost is 1.5274343
+2019-01-31 21:38:27,943 - train_testing - INFO - Accuracy is: 0.32
+2019-01-31 21:38:27,943 - train_testing - INFO - Accuracy is: 0.32
