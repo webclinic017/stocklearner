@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../baselines/.idea/baselines.iml" filepath="$PROJECT_DIR$/../baselines/.idea/baselines.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/stocklearner.iml" filepath="$PROJECT_DIR$/.idea/stocklearner.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../stocktransformer/.idea/stocktransformer.iml" filepath="$PROJECT_DIR$/../stocktransformer/.idea/stocktransformer.iml" />
     </modules>
   </component>
 </project>
