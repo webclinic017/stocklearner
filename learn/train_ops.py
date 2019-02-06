@@ -32,6 +32,7 @@ class TrainOps:
         config = configparser.ConfigParser()
         config.read(train_config_file)
 
+        self.is_training = config.getboolean("hyper parameters", "is_training")
         self.echo = config.getint("hyper parameters", "echo")
         self.type = config.get("hyper parameters", "train_type")
         self.learning_rate = config.getfloat("hyper parameters", "learning_rate")
@@ -60,7 +61,10 @@ class TrainOps:
 
         with tf.name_scope("train_step"):
             optimizer = fn_util.get_opt_fn(self.opt_fn)
-            self.train_step = optimizer(self.learning_rate).minimize(self.cost)
+
+            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            with tf.control_dependencies(update_ops):
+                self.train_step = optimizer(self.learning_rate).minimize(self.cost)
 
         with tf.name_scope("accuracy"):
             self.accuracy = fn_util.get_acc_fn(self.acc_fn, self.network.y_, self.network.y)
@@ -120,7 +124,9 @@ class TrainOps:
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
                 summary, _, cost, accuracy = sess.run([merged, self.train_step, self.cost, self.accuracy],
-                                                      feed_dict={self.network.x: batch_xs, self.network.y_: batch_ys},
+                                                      feed_dict={self.network.x: batch_xs,
+                                                                 self.network.y_: batch_ys,
+                                                                 self.network.is_training:self.is_training},
                                                       options=run_options,
                                                       run_metadata=run_metadata)
 
@@ -141,7 +147,10 @@ class TrainOps:
                 if current_step % 100 == 0:
                     self.logger.info("Step " + str(current_step) + ": cost is " + str(cost))
                     self.logger.info("Step " + str(current_step) + ": cost is " + str(cost))
-                    _, acc = sess.run([merged, self.accuracy], feed_dict={self.network.x: batch_xs, self.network.y_: batch_ys})
+                    _, acc = sess.run([merged, self.accuracy],
+                                      feed_dict={self.network.x: batch_xs,
+                                                 self.network.y_: batch_ys,
+                                                 self.network.is_training: self.is_training})
                     self.logger.info("Accuracy is: " + str(acc))
                     self.logger.info("Accuracy is: " + str(acc))
 

@@ -4,7 +4,7 @@ from util import model_util
 from util import log_util
 import configparser
 
-CONFIG_FILE_PATH = "./app.config"
+CONFIG_FILE_PATH = "./sl_ops.config"
 
 logger = log_util.get_file_logger("sl_ops.py", "sl_ops.log")
 

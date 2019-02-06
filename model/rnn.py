@@ -26,17 +26,13 @@ class RNN(Network):
             self.time_steps = self.config.getint("input", "time_steps")
             self.x = tf.placeholder("float", [None, self.time_steps, self.input_size])
             self.network = tf.unstack(self.x, self.time_steps, 1)
-            self.logger.info("Building Input Layer:Input Size =>" + str(self.input_size))
-            self.logger.info("Building Input Layer:Time Steps =>" + str(self.time_steps))
-            print("Building Input Layer:Input Size =>" + str(self.input_size))
-            print("Building Input Layer:Time Steps =>" + str(self.time_steps))
+            self.logger.info("Building Input Layer:Input Size =>" + str(self.input_size) + " Time Steps =>" + str(self.time_steps))
+            print("Building Input Layer:Input Size =>" + str(self.input_size) + " Time Steps =>" + str(self.time_steps))
 
         stacked_rnn = []
         for layer in self.layers:
-            self.logger.info("Building for " + layer)
-            print("Building for " + layer)
             cell_type = self.config.get(layer, "cell_type")
-            self.logger.info("Building RNN Cells:Cell Type =>" + cell_type)
+            self.logger.info("Building " + layer + "RNN Cells:Cell Type =>" + cell_type)
             print("Building RNN Cells:Cell Type =>" + cell_type)
 
             hidden_cells = self.config.getint(layer, "hidden_cells")
