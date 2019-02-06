@@ -44,7 +44,7 @@ class DQNConfig:
         self.discount = 0.99
         self.train_frequency = 4
         self.learn_start = 32
-        self.double_q = False
+        self.double_q = True
 
         self.summary_log_dir = "summary"
         self.enable_summary = False
