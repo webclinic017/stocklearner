@@ -1,8 +1,0 @@
-2019-01-31 22:30:26,604 - network.py - INFO - Building Input Layer:Input Size =>8
-2019-01-31 22:31:36,121 - network.py - INFO - Building Input Layer:Input Size =>8
-2019-01-31 22:31:36,121 - network.py - INFO - Building Hidden Layer:Unit Size =>50
-2019-01-31 22:31:36,137 - network.py - INFO - Building Hidden Layer:Unit Size =>40
-2019-01-31 22:31:36,137 - network.py - INFO - Building Hidden Layer:Unit Size =>30
-2019-01-31 22:31:36,153 - network.py - INFO - Building Hidden Layer:Unit Size =>20
-2019-01-31 22:31:36,171 - network.py - INFO - Building Hidden Layer:Unit Size =>10
-2019-01-31 22:31:36,181 - network.py - INFO - Building Input Layer:Output Size =>8

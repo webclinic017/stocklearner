@@ -35,15 +35,16 @@ class MLP(Network):
                     elif layer == "output":
                         self.y_ = tf.placeholder(dtype=tf.float32, shape=[None, n_units], name=self.network_name + "_" + layer)
                         self.y = tf.layers.dense(self.network, n_units, activation=act, name=self.network_name + "_" + layer)
-                        self.logger.info("Building Input Layer:Output Size =>" + str(n_units))
-                        print("Building Input Layer:Output Size =>" + str(n_units))
+                        self.logger.info("Building Output Layer:Output Size =>" + str(n_units))
+                        print("Building Output Layer:Output Size =>" + str(n_units))
                     else:
                         # TODO: Testing for batch normalization and dropout
-                        self.network = tf.layers.dense(self.network, n_units, activation=None, name= layer + "_Wx_plus_b")
+                        self.network = tf.layers.dense(self.network, n_units, activation=None, name=layer + "_Wx_plus_b")
                         self.logger.info("Building Hidden Layer:Unit Size =>" + str(n_units))
                         print("Building Hidden Layer:Unit Size =>" + str(n_units))
 
-                        if self.config.has_option(layer, "batch_normalization"):
+                        if self.config.has_option(layer, "batch_normalization") \
+                                and self.config.getboolean(layer, "batch_normalization") is True:
                             self.network = tf.layers.batch_normalization(self.network)
                             self.logger.info("Adding Batch Normalization to " + layer)
                             print("Adding Batch Normalization to " + layer)

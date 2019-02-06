@@ -1,5 +1,0 @@
-2019-01-31 22:27:54,465 - sl_ops.py - INFO - No section: 'network'
-2019-01-31 22:29:16,230 - sl_ops.py - INFO - No section: 'network'
-2019-01-31 22:30:26,604 - model_util.py - INFO - Current model type is MLP
-2019-01-31 22:30:26,604 - sl_ops.py - INFO - '_layer1/kernel' is not a valid scope name
-2019-01-31 22:31:36,106 - model_util.py - INFO - Current model type is MLP
