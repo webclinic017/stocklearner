@@ -29,9 +29,9 @@ $ pip install -r requirements.txt
 
 ## Run:
 
-1. Modify app.config to set the training data path, eval data path and model config path
+1. Modify `app.config` to set the training data path, eval data path and model config path
 2. Create or modify your own model config ini file and put it into the model config path
-3. Run sl_ops.py for supervised learning and run rl_ops for reinforcement learning
+3. Run `sl_ops.py` for supervised learning and run `rl_ops.py` for reinforcement learning
 
 ## Models:
 
@@ -43,7 +43,7 @@ Please use CSV file with columns as below:
 `"DATE", "OPEN", "HIGH", "CLOSE", "LOW", "VOLUME", "PRICE_CHANGE", "P_CHANGE", "TURNOVER", "LABEL"`
 
 * Date will be removed during training 
-* or you can modify /feed/csv_data.py to support your own columns
+* Or modify `/feed/csv_data.py` to support the new columns
 
 ### Known issue:
 
