@@ -38,7 +38,6 @@ class MLP(Network):
                         self.logger.info("Building Output Layer:Output Size =>" + str(n_units))
                         print("Building Output Layer:Output Size =>" + str(n_units))
                     else:
-                        # TODO: Testing for batch normalization and dropout
                         self.network = tf.layers.dense(self.network, n_units, activation=None, name=layer + "_Wx_plus_b")
                         self.logger.info("Building Hidden Layer:Unit Size =>" + str(n_units))
                         print("Building Hidden Layer:Unit Size =>" + str(n_units))
