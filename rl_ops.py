@@ -9,7 +9,7 @@ import tensorflow as tf
 import random
 import time
 
-episode = 50
+episode = 500
 data_dir = "D:\\Output\\Train\\"
 network_config_path = "./config_file/stock_mlp_baseline.cls"
 
@@ -72,11 +72,12 @@ if __name__ == "__main__":
             cerebro.broker.setcash(100000.0)
 
             cerebro.run()
-            print("Final Portfolio Value: %.2f" % cerebro.broker.getvalue())
+
+            final_portfolio = round(cerebro.broker.getvalue(), 2)
+            print("Final Portfolio Value: " + str(final_portfolio))
             # thestrat = thestrats[0]
             # print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
+            assert final_portfolio >= 0, "????"
 
-            # cerebro.plot()
             global_step = cerebro.getglobalstep()
-
             # print(global_step)
