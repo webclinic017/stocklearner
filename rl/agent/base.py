@@ -28,7 +28,7 @@ class RLBaseAgent:
 
 class RLCommonStrategy(bt.Strategy):
     params = (
-        ("printlog", False),
+        ("printlog", True),
     )
 
     def log(self, txt, dt=None, doprint=False):
@@ -106,7 +106,7 @@ class RLCommonStrategy(bt.Strategy):
         if calculate_type == "pct":
             reward = round((self.current_value - self.last_value) / self.last_value, 10)
 
-        self.log("Reward: " + str(reward))
+        # self.log("Reward: " + str(reward))
         return reward
 
     def _get_observation(self, date, offset=0, scaled_data=False):
@@ -139,7 +139,7 @@ class RLCommonStrategy(bt.Strategy):
     # As env.render(), but need to get observation and reward
     def next(self):
         # Simply log the closing price of the series from the reference
-        self.log("Next Close, %.2f" % self.dataclose[0])
+        # self.log("Next Close, %.2f" % self.dataclose[0])
         self.log("Broker value, %.2f" % self.broker.getvalue())
 
         self.date = self.datas[0].datetime.date(0).strftime("%Y-%m-%d")

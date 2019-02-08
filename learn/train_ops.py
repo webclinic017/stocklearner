@@ -4,7 +4,6 @@ import datetime
 from util import fn_util
 from util import dl_util
 from util import log_util
-from feed import csv_data as stock_data
 
 
 class TrainOps:
@@ -126,7 +125,7 @@ class TrainOps:
                 summary, _, cost, accuracy = sess.run([merged, self.train_step, self.cost, self.accuracy],
                                                       feed_dict={self.network.x: batch_xs,
                                                                  self.network.y_: batch_ys,
-                                                                 self.network.is_training:self.is_training},
+                                                                 self.network.is_training: self.is_training},
                                                       options=run_options,
                                                       run_metadata=run_metadata)
 
