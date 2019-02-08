@@ -1,6 +1,5 @@
 from feed.bt_data import BTCSVBasicData
 from rl.agent.base import *
-# from rl.agent.dqn_agent import DQNAgent
 from rl.agent.dqn_agent_c import DQNAgent, DQNConfig
 from rl.env.cerebro_ext import RLExtCerebro
 from os import listdir
@@ -8,11 +7,10 @@ from os.path import join
 import backtrader as bt
 import tensorflow as tf
 import random
+import time
 
 episode = 50
 data_dir = "D:\\Output\\Train\\"
-# data_path = "./test_data/stock/000002.csv"
-# scaled_data_path = ""
 network_config_path = "./config_file/stock_mlp_baseline.cls"
 
 
@@ -27,7 +25,6 @@ if __name__ == "__main__":
     data_files = [f for f in listdir(data_dir) if f != ".DS_Store" and "_s" not in f]
 
     with tf.Session() as sess:
-        # agent = DQNAgent(network_config_path, sess)
         config = DQNConfig()
         agent = DQNAgent(config, sess)
         global_step = 0
@@ -63,7 +60,6 @@ if __name__ == "__main__":
             cerebro.addglobalstep(global_step)
 
             # Add sharpe ratio analyzer to Cerebro
-            cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name="sp")
             # cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
 
             # Add a FixedSize sizer according to the stake
@@ -76,9 +72,11 @@ if __name__ == "__main__":
             cerebro.broker.setcash(100000.0)
 
             cerebro.run()
-
             print("Final Portfolio Value: %.2f" % cerebro.broker.getvalue())
-            # cerebro.plot()
+            # thestrat = thestrats[0]
+            # print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
 
+            # cerebro.plot()
             global_step = cerebro.getglobalstep()
+
             # print(global_step)

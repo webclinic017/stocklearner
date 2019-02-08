@@ -1,5 +1,5 @@
 from .base import RLBaseAgent
-from rl.dqn.replay_buffer import ReplayBuffer
+from rl.dqn.replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
 from rl.ops import linear, clipped_error
 import tensorflow as tf
 import numpy as np
@@ -7,18 +7,18 @@ import os
 import random
 
 # TODO: 1. configure parameters
-#       2. Double Q
+#       2. Double Q - DONE
 #       3. Duel DQN
-#       4. Prioritized Replay Buffer
+#       4. Prioritized Replay Buffer - DONE
 #       3. Summary
 #       4. Checkpoint - DONE
 #       5. Copy network vars from target to prediction
-#       6. learning rate ops
+#       6. learning rate ops - DONE
 
 
 class DQNConfig:
     def __init__(self, **kwargs):
-        self.buffer_size = 1000
+        self.buffer_size = 200
 
         self.input_size = 8
         self.l1_unit = 512
@@ -44,8 +44,17 @@ class DQNConfig:
         self.discount = 0.99
         self.train_frequency = 4
         self.learn_start = 32
-        self.double_q = True
 
+        self.double_q = True
+        self.dueling = False
+
+        self.prioritized_replay = True
+        self.prioritized_replay_alpha = 0.6
+        self.prioritized_replay_beta = 0.4
+        self.prioritized_replay_beta_incremental = 0.0001
+        self.prioritized_replay_eps = 1e-6
+
+        self.epsilon = 0.9
         self.summary_log_dir = "summary"
         self.enable_summary = False
 
@@ -56,8 +65,11 @@ class DQNAgent(RLBaseAgent):
 
         self.sess = sess
         self.config = config
-        self.replay_buffer = ReplayBuffer(self.config.buffer_size)
-        self.saver = None
+
+        if self.config.prioritized_replay:
+            self.replay_buffer = PrioritizedReplayBuffer(self.config.buffer_size, self.config.prioritized_replay_alpha)
+        else:
+            self.replay_buffer = ReplayBuffer(self.config.buffer_size)
 
         with tf.variable_scope("step"):
             self.step_op = tf.Variable(0, trainable=False, name="step")
@@ -67,12 +79,12 @@ class DQNAgent(RLBaseAgent):
         self.w = {}
         self.t_w = {}
 
-        self.build_dqn()
-
         if not os.path.exists(self.config.checkpoint_dir):
             os.makedirs(self.config.checkpoint_dir)
 
         self.saver = tf.train.Saver(max_to_keep=self.config.max_to_save)
+
+        self.build_dqn()
 
         if self.config.enable_summary:
             self.writer = tf.summary.FileWriter(self.config.summary_log_dir, sess.graph)
@@ -121,10 +133,9 @@ class DQNAgent(RLBaseAgent):
             q_acted = tf.reduce_sum(self.q * action_one_hot, reduction_indices=1, name='q_acted')
 
             self.delta = self.target_q_t - q_acted
-
             self.global_step = tf.Variable(0, trainable=False)
-
             self.loss = tf.reduce_mean(clipped_error(self.delta), name='loss')
+
             self.learning_rate_step = tf.placeholder(dtype=tf.int32, shape=None, name='learning_rate_step')
             self.learning_rate_op = tf.maximum(self.config.learning_rate_minimum,
                                                tf.train.exponential_decay(
@@ -135,11 +146,8 @@ class DQNAgent(RLBaseAgent):
                                                    staircase=True))
             self.optimizer = tf.train.RMSPropOptimizer(
                 self.learning_rate_op, momentum=0.95, epsilon=0.01).minimize(self.loss)
-            # self.optimizer = tf.train.AdagradOptimizer(self.config_file.learning_rate).minimize(self.loss)
 
-        # tf.initialize_all_variables().run()
         tf.global_variables_initializer().run()
-        # self.saver = tf.train.Saver({"w": self.w.values(), "step_op": [self.step_op]}, max_to_keep=30)
         self.load_model()
         self.update_target_q_network()
 
@@ -149,8 +157,7 @@ class DQNAgent(RLBaseAgent):
 
     def save_model(self, step):
         print(" [*] Saving checkpoints...")
-        # model_name = type(self).__name__
-        self.saver.save(self.sess, self.config.checkpoint_dir, global_step=step)
+        self.saver.save(self.sess, os.path.join(self.config.checkpoint_dir, "dqn_agent"), global_step=step)
 
     def load_model(self):
         print(" [*] Loading checkpoints...")
@@ -158,7 +165,6 @@ class DQNAgent(RLBaseAgent):
         ckpt = tf.train.get_checkpoint_state(self.config.checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
             ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
-            print(ckpt_name)
             fname = os.path.join(self.config.checkpoint_dir, ckpt_name)
             self.saver.restore(self.sess, fname)
             print(" [*] Load SUCCESS: %s" % fname)
@@ -182,7 +188,14 @@ class DQNAgent(RLBaseAgent):
         if len(self.replay_buffer) < self.config.batch_size:
             return
 
-        s_t, action, reward, s_t_plus_1, terminal = self.replay_buffer.sample(self.config.batch_size)
+        if self.config.prioritized_replay:
+            self.config.prioritized_replay_beta = np.min([1.,
+                                                          self.config.prioritized_replay_beta
+                                                          + self.config.prioritized_replay_beta_incremental])
+            s_t, action, reward, s_t_plus_1, terminal, weights, batch_idxes \
+                = self.replay_buffer.sample(self.config.batch_size, self.config.prioritized_replay_beta)
+        else:
+            s_t, action, reward, s_t_plus_1, terminal = self.replay_buffer.sample(self.config.batch_size)
 
         if self.config.double_q:
             # Double Q-learning
@@ -197,17 +210,16 @@ class DQNAgent(RLBaseAgent):
             max_q_t_plus_1 = np.max(q_t_plus_1, axis=1)
             target_q_t = (1. - terminal) * self.config.discount * max_q_t_plus_1 + reward
 
-        _, q_t, loss = self.sess.run([self.optimizer, self.q, self.loss], {
-            self.target_q_t: target_q_t,
-            self.action: action,
-            self.s_t: s_t,
-            self.learning_rate_step: step,
-            })
+        _, q_t, loss, td_errors = self.sess.run([self.optimizer, self.q, self.loss, self.delta],
+                                                feed_dict={self.target_q_t: target_q_t,
+                                                           self.action: action,
+                                                           self.s_t: s_t,
+                                                           self.learning_rate_step: step
+                                                           })
 
-        # self.writer.add_summary(summary_str, self.step)
-        # self.total_loss += loss
-        # self.total_q += q_t.mean()
-        # self.update_count += 1
+        if self.config.prioritized_replay:
+            new_priorities = np.abs(td_errors) + self.config.prioritized_replay_eps
+            self.replay_buffer.update_priorities(batch_idxes, new_priorities)
 
     def store(self, observe, reward, action, next_observe, terminal):
         if observe is None or next_observe is None:
@@ -215,12 +227,11 @@ class DQNAgent(RLBaseAgent):
         self.replay_buffer.add(observe, reward, action, next_observe, terminal)
 
     def choose_action(self, s_t, test_ep=None):
-        # ep = test_ep or (self.ep_end +
-        #                  max(0., (self.ep_start - self.ep_end)
-        #                      * (self.ep_end_t - max(0., self.step - self.learn_start)) / self.ep_end_t))
-        ep = 0.9
-        if random.random() < ep:
+        if random.random() < self.config.epsilon:
             action = random.randrange(self.config.action_size)
         else:
             action = self.q_action.eval({self.s_t: [s_t]})[0]
+
+        self.config.epsilon = max(self.config.epsilon - 0.00001, 0.1)
+
         return action
