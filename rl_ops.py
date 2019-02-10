@@ -5,7 +5,6 @@ from rl.env.cerebro_ext import RLExtCerebro
 from rl.env.sizer_ext import PercentSizer
 from os import listdir
 from os.path import join
-import backtrader as bt
 import tensorflow as tf
 import random
 import time
@@ -45,8 +44,6 @@ if __name__ == "__main__":
             # Add a strategy
             cerebro.addstrategy(RLCommonStrategy)
 
-            print("Starting Portfolio Value: %.2f" % cerebro.broker.getvalue())
-
             # Create a Data Feed
             data = BTCSVBasicData(
                 dataname=data_path,
@@ -72,11 +69,15 @@ if __name__ == "__main__":
 
             # Set our desired cash start
             cerebro.broker.setcash(100000.0)
+            print("Starting Portfolio Value: %.2f" % cerebro.broker.getvalue())
 
             cerebro.run()
-            print("Final Portfolio Value: %.2f" % cerebro.broker.getvalue())
+
+            final_portfolio = round(cerebro.broker.getvalue(), 2)
+            print("Final Portfolio Value: " + str(final_portfolio))
             # thestrat = thestrats[0]
             # print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
+            assert final_portfolio >= 0, "????"
 
             # cerebro.plot()
             global_step = cerebro.getglobalstep()

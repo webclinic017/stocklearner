@@ -99,7 +99,7 @@ class RLCommonStrategy(bt.Strategy):
 
     def _get_reward(self, calculate_type="upl"):
         reward = 0.
-        self.log("Last Portfolio " + str(self.last_value) + " Current Portfolio: " + str(self.current_value))
+        # self.log("Last value " + str(self.last_value) + " current value: " + str(self.current_value))
         if calculate_type == "upl":
             reward = self.current_value - self.last_value
 
@@ -140,7 +140,8 @@ class RLCommonStrategy(bt.Strategy):
     def next(self):
         # Simply log the closing price of the series from the reference
         # self.log("Next Close, %.2f" % self.dataclose[0])
-        self.log("Broker value, %.2f" % self.broker.getvalue())
+        self.log("Broker value: " + str(round(self.broker.getvalue(), 2)) + ", cash: " + str(round(self.broker.get_cash(), 2)))
+        self.log("Position size: " + str(self.position.size) + ", price: " + str(round(self.position.price, 2)))
 
         self.date = self.datas[0].datetime.date(0).strftime("%Y-%m-%d")
         # print("date in next()")

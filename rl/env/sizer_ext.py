@@ -37,7 +37,7 @@ class PercentSizer(bt.Sizer):
     params = (
         ('percents', 50),
         ('mode', 1),
-        ("printlog", True),
+        ("printlog", False),
     )
 
     def __init__(self):
