@@ -28,7 +28,7 @@ class RLBaseAgent:
 
 class RLCommonStrategy(bt.Strategy):
     params = (
-        ("printlog", True),
+        ("printlog", False),
     )
 
     def log(self, txt, dt=None, doprint=False):
@@ -165,7 +165,8 @@ class RLCommonStrategy(bt.Strategy):
             # Keep track of the created order to avoid a 2nd order
             self.order = self.buy()
 
-        elif self.action == self.agent.Sell:
+        elif self.action == self.agent.Sell and self.position:
+            # We must in the market before we can sell
             # SELL, SELL, SELL!!! (with all possible default parameters)
             self.log("SELL CREATE, %.2f" % self.dataclose[0], doprint=False)
 
