@@ -99,7 +99,7 @@ class RLCommonStrategy(bt.Strategy):
 
     def _get_reward(self, calculate_type="upl"):
         reward = 0.
-        self.log("Last value " + str(self.last_value) + " current value: " + str(self.current_value))
+        self.log("Last Portfolio " + str(self.last_value) + " Current Portfolio: " + str(self.current_value))
         if calculate_type == "upl":
             reward = self.current_value - self.last_value
 

@@ -2,6 +2,7 @@ from feed.bt_data import BTCSVBasicData
 from rl.agent.base import *
 from rl.agent.dqn_agent_c import DQNAgent, DQNConfig
 from rl.env.cerebro_ext import RLExtCerebro
+from rl.env.sizer_ext import PercentSizer
 from os import listdir
 from os.path import join
 import backtrader as bt
@@ -63,7 +64,8 @@ if __name__ == "__main__":
             # cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
 
             # Add a FixedSize sizer according to the stake
-            cerebro.addsizer(bt.sizers.FixedSize, stake=100)
+            # cerebro.addsizer(bt.sizers.FixedSize, stake=100)
+            cerebro.addsizer(PercentSizer)
 
             # Set the commission - 0.1% ... divide by 100 to remove the %
             cerebro.broker.setcommission(commission=0.001)
@@ -78,5 +80,5 @@ if __name__ == "__main__":
 
             # cerebro.plot()
             global_step = cerebro.getglobalstep()
-
+            time.sleep(5)
             # print(global_step)
