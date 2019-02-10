@@ -2,14 +2,14 @@ from feed.bt_data import BTCSVBasicData
 from rl.agent.base import *
 from rl.agent.dqn_agent_c import DQNAgent, DQNConfig
 from rl.env.cerebro_ext import RLExtCerebro
+from rl.env.sizer_ext import PercentSizer
 from os import listdir
 from os.path import join
-import backtrader as bt
 import tensorflow as tf
 import random
 import time
 
-episode = 500
+episode = 50
 data_dir = "D:\\Output\\Train\\"
 network_config_path = "./config_file/stock_mlp_baseline.cls"
 
@@ -44,8 +44,6 @@ if __name__ == "__main__":
             # Add a strategy
             cerebro.addstrategy(RLCommonStrategy)
 
-            print("Starting Portfolio Value: %.2f" % cerebro.broker.getvalue())
-
             # Create a Data Feed
             data = BTCSVBasicData(
                 dataname=data_path,
@@ -63,13 +61,15 @@ if __name__ == "__main__":
             # cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
 
             # Add a FixedSize sizer according to the stake
-            cerebro.addsizer(bt.sizers.FixedSize, stake=100)
+            # cerebro.addsizer(bt.sizers.FixedSize, stake=100)
+            cerebro.addsizer(PercentSizer)
 
             # Set the commission - 0.1% ... divide by 100 to remove the %
             cerebro.broker.setcommission(commission=0.001)
 
             # Set our desired cash start
             cerebro.broker.setcash(100000.0)
+            print("Starting Portfolio Value: %.2f" % cerebro.broker.getvalue())
 
             cerebro.run()
 
@@ -79,5 +79,7 @@ if __name__ == "__main__":
             # print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
             assert final_portfolio >= 0, "????"
 
+            # cerebro.plot()
             global_step = cerebro.getglobalstep()
+            time.sleep(5)
             # print(global_step)
