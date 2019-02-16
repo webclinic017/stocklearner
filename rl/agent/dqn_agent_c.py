@@ -8,13 +8,13 @@ import configparser
 import os
 import random
 
-# TODO: 1. configure parameters
+# TODO: 1. configure parameters - DONE
 #       2. Double Q - DONE
 #       3. Duel DQN
 #       4. Prioritized Replay Buffer - DONE
 #       3. Summary
 #       4. Checkpoint - DONE
-#       5. Copy network vars from target to prediction
+#       5. Copy network vars from target to prediction - DONE
 #       6. learning rate ops - DONE
 
 
