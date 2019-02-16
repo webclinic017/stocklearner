@@ -60,7 +60,7 @@ class RLCommonStrategy(bt.Strategy):
         self.done = False
 
         # self.global_step = 0
-        self.learning_freq = self.agent.config.learning_freq
+        self.learning_freq = self.agent.learning_freq
 
         # As env.step(), but next observation, reward and done will be given in next function.
     def notify_order(self, order):
