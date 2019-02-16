@@ -1,6 +1,6 @@
 from feed.bt_data import BTCSVBasicData
 from rl.agent.base import *
-from rl.agent.dqn_agent_c import DQNAgent, DQNConfig
+from rl.agent.dqn_agent_c import DQNAgent
 from rl.env.cerebro_ext import RLExtCerebro
 from rl.env.sizer_ext import PercentSizer
 from os import listdir
@@ -9,9 +9,10 @@ import tensorflow as tf
 import random
 import time
 
-episode = 50
+episode = 5000
 data_dir = "D:\\Output\\Train\\"
 network_config_path = "./config_file/stock_mlp_baseline.cls"
+config_file = "./config_file/dqn_config.ini"
 
 
 def get_data_files(file_list):
@@ -25,8 +26,7 @@ if __name__ == "__main__":
     data_files = [f for f in listdir(data_dir) if f != ".DS_Store" and "_s" not in f]
 
     with tf.Session() as sess:
-        config = DQNConfig()
-        agent = DQNAgent(config, sess)
+        agent = DQNAgent(config_file, sess)
         global_step = 0
 
         for i in range(episode):
@@ -81,5 +81,5 @@ if __name__ == "__main__":
 
             # cerebro.plot()
             global_step = cerebro.getglobalstep()
-            time.sleep(5)
+            # time.sleep(5)
             # print(global_step)
