@@ -1,6 +1,6 @@
 from feed.bt_data import BTCSVBasicData
 from rl.agent.base import *
-from rl.agent.dqn_agent_c import DQNAgent
+from rl.agent.dqn_agent import DQNAgent
 from rl.env.cerebro_ext import RLExtCerebro
 from rl.env.sizer_ext import PercentSizer
 from os import listdir
