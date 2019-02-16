@@ -11,7 +11,6 @@ import time
 
 episode = 5000
 data_dir = "D:\\Output\\Train\\"
-network_config_path = "./config_file/stock_mlp_baseline.cls"
 config_file = "./config_file/dqn_config.ini"
 
 
