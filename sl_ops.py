@@ -1,36 +1,36 @@
 from feed import csv_data as stock_data
+from learn.train_ops import TrainOps
 from util import model_util
-from os.path import join, isdir
-from os import listdir
 from util import log_util
 import configparser
 
-CONFIG_FILE_PATH = "./app.config"
+CONFIG_FILE_PATH = "./sl_ops.config"
 
-
-logger = log_util.get_file_logger("sl_ops.py", "main.log")
+logger = log_util.get_file_logger("sl_ops.py", "sl_ops.log")
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE_PATH)
 
-    training_data_path = config.get("Data", "training_data_path")
-    eval_data_path = config.get("Data", "eval_data_path")
+    train_ops_name = config.get("train_ops", "name")
+    training_data_path = config.get("data_path", "training_data_path")
+    eval_data_path = config.get("data_path", "eval_data_path")
 
-    config_list_path = config.get("Train", "config_list_path")
-    
-    config_file_list = [join(config_list_path, f) for f in listdir(config_list_path) if f != ".DS_Store" and not isdir(join(config_list_path, f))]
-    logger.info("Config file list path: " + config_list_path)
+    network_config_file = config.get("config_file", "network_config_file")
+    dataset_config_file = config.get("config_file", "dataset_config_file")
+    train_ops_config_file = config.get("config_file", "train_ops_config_file")
 
     train_dataset = stock_data.csv_input_fn(training_data_path)
     eval_dataset = stock_data.csv_input_fn(eval_data_path)
 
-    # Only run the first network config for testing
-    for config_file in config_file_list[:1]:
-        logger.info("Current config_file file is: " + config_file)
-        try:
-            model = model_util.get_model(config_file)
-            model.train(train_dataset)
-            # model.eval(eval_dataset)
-        except Exception as ex:
-            logger.info(ex)
+    try:
+        network = model_util.get_network(network_config_file, "testing")
+        train_ops = TrainOps(train_ops_name)
+        train_ops.add_network(network)
+        train_ops.add_dataset(train_dataset, dataset_config_file)
+        train_ops.add_train_ops(train_ops_config_file)
+        train_ops.train()
+
+        # train_ops.eval(eval_dataset)
+    except Exception as ex:
+        logger.info(ex)

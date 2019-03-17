@@ -1,25 +1,25 @@
 from model.mlp import *
 from model.rnn import *
 
-logger = log_util.get_file_logger("model_util.py", "main.log")
+logger = log_util.get_file_logger("model_util.py", "sl_ops.log")
 
 
-def get_model(model_config_path, network_name=""):
+def get_network(network_config_path, network_name=""):
     config = configparser.ConfigParser()
-    config.read(model_config_path)
-    model_type = config.get("Model", "type")
-    logger.info("Current model type is " + model_type)
+    config.read(network_config_path)
+    network_type = config.get("network", "type")
+    logger.info("Current model type is " + network_type)
 
-    if model_type == "MLP":
-        model = MLP(config_file=model_config_path, network_name=network_name)
-        return model
+    if network_type == "MLP":
+        network = MLP(config_file=network_config_path, network_name=network_name)
+        return network
 
-    if model_type == "RNN":
-        model = RNN(config_file=model_config_path)
-        return model
-    raise ModelTypeNotFound()
+    if network_type == "RNN":
+        network = RNN(config_file=network_config_path, network_name=network_name)
+        return network
+    raise NetworkTypeNotFound()
 
 
-class ModelTypeNotFound(Exception):
+class NetworkTypeNotFound(Exception):
     def __init__(self):
-        logger.error("Model Type is not found")
+        logger.error("Network Type is not found")

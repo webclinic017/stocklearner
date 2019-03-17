@@ -60,7 +60,7 @@ class RLCommonStrategy(bt.Strategy):
         self.done = False
 
         # self.global_step = 0
-        self.learning_freq = self.agent.config.learning_freq
+        self.learning_freq = self.agent.learning_freq
 
         # As env.step(), but next observation, reward and done will be given in next function.
     def notify_order(self, order):
@@ -99,14 +99,14 @@ class RLCommonStrategy(bt.Strategy):
 
     def _get_reward(self, calculate_type="upl"):
         reward = 0.
-        self.log("Last value " + str(self.last_value) + " current value: " + str(self.current_value))
+        # self.log("Last value " + str(self.last_value) + " current value: " + str(self.current_value))
         if calculate_type == "upl":
             reward = self.current_value - self.last_value
 
         if calculate_type == "pct":
             reward = round((self.current_value - self.last_value) / self.last_value, 10)
 
-        self.log("Reward: " + str(reward))
+        # self.log("Reward: " + str(reward))
         return reward
 
     def _get_observation(self, date, offset=0, scaled_data=False):
@@ -139,8 +139,9 @@ class RLCommonStrategy(bt.Strategy):
     # As env.render(), but need to get observation and reward
     def next(self):
         # Simply log the closing price of the series from the reference
-        self.log("Next Close, %.2f" % self.dataclose[0])
-        self.log("Broker value, %.2f" % self.broker.getvalue())
+        # self.log("Next Close, %.2f" % self.dataclose[0])
+        self.log("Broker value: " + str(round(self.broker.getvalue(), 2)) + ", cash: " + str(round(self.broker.get_cash(), 2)))
+        self.log("Position size: " + str(self.position.size) + ", price: " + str(round(self.position.price, 2)))
 
         self.date = self.datas[0].datetime.date(0).strftime("%Y-%m-%d")
         # print("date in next()")
@@ -164,7 +165,8 @@ class RLCommonStrategy(bt.Strategy):
             # Keep track of the created order to avoid a 2nd order
             self.order = self.buy()
 
-        elif self.action == self.agent.Sell:
+        elif self.action == self.agent.Sell and self.position:
+            # We must in the market before we can sell
             # SELL, SELL, SELL!!! (with all possible default parameters)
             self.log("SELL CREATE, %.2f" % self.dataclose[0], doprint=False)
 

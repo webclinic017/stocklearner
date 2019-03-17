@@ -5,35 +5,29 @@ type = MLP
 unit = 8
 
 [layer1]
-unit = 50
+unit = 512
 act_fn = tf.nn.relu6
 keep_prob = 0.9
 batch_normalization = true
 
 [layer2]
-unit = 40
+unit = 256
 act_fn = tf.nn.relu6
 keep_prob = 0.9
 batch_normalization = true
 
 [layer3]
-unit = 30
+unit = 128
 act_fn = tf.nn.relu6
 keep_prob = 0.9
 batch_normalization = true
 
 [layer4]
-unit = 20
+unit = 64
 act_fn = tf.nn.relu6
 keep_prob = 0.9
-batch_normalization = False
-
-[layer5]
-unit = 10
-act_fn = tf.nn.relu6
-keep_prob = 0.9
-batch_normalization = False
+batch_normalization = true
 
 [output]
-unit = 8
+unit = 4
 act_fn = tf.nn.relu6

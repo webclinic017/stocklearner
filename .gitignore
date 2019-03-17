@@ -45,3 +45,6 @@ main.log
 .idea/inspectionProfiles/Project_Default.xml
 .idea/modules.xml
 .idea/modules.xml
+.idea/modules.xml
+.idea/modules.xml
+*.log
