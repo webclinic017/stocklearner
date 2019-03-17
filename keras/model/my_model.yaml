@@ -1,0 +1,86 @@
+config:
+  layers:
+    - class_name: InputLayer
+      config:
+        name: main_input
+        input_shape: !!python/tuple [0,0]
+        batch_size: 32
+        dtype: float32
+        input_tensor: null
+        sparse: false
+    - class_name: Dense
+      config:
+        name: dense1
+        units: 64
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      config:
+        name: dense2
+        units: 32
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      config:
+        name: dense3
+        units: 16
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      config:
+        name: main_output
+        units: 8
+        activation: sigmoid
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
