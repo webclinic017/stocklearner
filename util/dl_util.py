@@ -25,15 +25,15 @@ def one_hot(source_slide, boundaries=[-7, -5, -3, 0, 3, 5, 7], on_value=1, off_v
     return one_hot_slide
 
 
-def dict_to_list(dict):
-    list = []
-    for i in dict:
-        list.append(dict[i])
-    return np.stack(list, axis=1)
+def dict_to_list(dict_in):
+    list_out = []
+    for i in dict_in:
+        list_out.append(dict_in[i])
+    return np.stack(list_out, axis=1)
 
 
-def rnn_output_split(list, time_steps, output_size):
-    reshaped_narray = np.array(list).reshape(-1, time_steps, output_size)
+def rnn_output_split(input_list, time_steps, output_size):
+    reshaped_narray = np.array(input_list).reshape(-1, time_steps, output_size)
     hsplited_narray = np.array(np.hsplit(reshaped_narray, time_steps)[-1])
     return hsplited_narray.reshape(-1, output_size)
 

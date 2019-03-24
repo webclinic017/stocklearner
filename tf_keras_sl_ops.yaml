@@ -1,0 +1,10 @@
+dataset:
+  training_data_path: ./test_data/stock/
+  eval_data_path: ./test_data/stock/
+  batch_size: 128
+  repeat_time: -1
+model:
+  config_path: ./config_file/yaml_config/stock_mlp_baseline.yaml
+  output_dir: ./output/
+train:
+  steps: 50000

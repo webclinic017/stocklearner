@@ -5,8 +5,12 @@ from anytree import Node, RenderTree, LevelOrderGroupIter
 
 
 class TreeModelBuilder:
+    @staticmethod
+    def __print_log(msg, debug=False):
+        if debug:
+            print(msg)
+
     def __init__(self, yaml_config_file):
-        print(tf.executing_eagerly())
         yaml_file = open(yaml_config_file, 'r', encoding='utf-8')
         self.yaml_config = yaml.load(yaml_file.read())
 
@@ -20,21 +24,7 @@ class TreeModelBuilder:
         self._build_tree()
         self._build_ffn()
         self._build_model()
-
-        self._manual_build_model()
-
-    def _manual_build_model(self):
-        main_input = tf.keras.layers.Input(shape=(None, 64), name='main_input')
-        aux_input = tf.keras.layers.Input(shape=(None, 8), name='aux_input')
-
-        dense1 = tf.keras.layers.Dense(64, activation='relu', name='dense1')(main_input)
-        concat = tf.keras.layers.concatenate([aux_input, dense1])
-        dense2 = tf.keras.layers.Dense(32, activation='relu', name='dense2')(concat)
-        dense3 = tf.keras.layers.Dense(16, activation='relu', name='dense3')(dense2)
-        main_output = tf.keras.layers.Dense(8, activation='sigmoid', name='main_output')(dense3)
-
-        self.x = tf.keras.Model(inputs=[main_input, aux_input], outputs=main_output)
-        self.x.summary()
+        self._compile()
 
     def _build_layers(self):
         layers_config = self.yaml_config["config"]["layers"]
@@ -44,8 +34,8 @@ class TreeModelBuilder:
             self.node_dict[layer.name] = Node(layer.name)
         # print(self.node_dict)
         for layer_name in self.layer_dict:
-            print(self.layer_dict[layer_name])
-        print("###############################################")
+            self.__print_log(self.layer_dict[layer_name])
+        self.__print_log("###############################################")
 
     def _build_tree(self):
         layers_config = self.yaml_config["config"]["layers"]
@@ -54,25 +44,25 @@ class TreeModelBuilder:
             parent_node = self.node_dict[parent_layer_name]
             children_node = [self.node_dict[x] for x in params["inbound_layer"] if x is not None]
             parent_node.children = children_node
-        print("Tree is built")
-        print("###############################################")
+        self.__print_log("Tree is built")
+        self.__print_log("###############################################")
 
     def _build_ffn(self):
         def _build_level(input_nodes):
-            print("Current Input Nodes")
-            print(input_nodes)
+            self.__print_log("Current Input Nodes")
+            self.__print_log(input_nodes)
 
             for name in input_nodes:
-                print("Processing node " + name)
-                print("Number of child nodes: " + str(len(self.node_dict[name].children)))
+                self.__print_log("Processing node " + name)
+                self.__print_log("Number of child nodes: " + str(len(self.node_dict[name].children)))
                 parent_layer = self.layer_dict[name]
-                print("Get parent layer")
-                print(type(parent_layer))
+                self.__print_log("Get parent layer")
+                self.__print_log(type(parent_layer))
 
                 if len(self.node_dict[name].children) == 1:
                     child_node = self.node_dict[name].children[0]
-                    print("Get child layer")
-                    print(type(self.layer_dict[child_node.name]))
+                    self.__print_log("Get child layer")
+                    self.__print_log(type(self.layer_dict[child_node.name]))
                     if "InputLayer" in str(type(self.layer_dict[child_node.name])):
                         output_node = parent_layer(self.layer_dict[child_node.name].input)
                         self.inputs.append(self.layer_dict[child_node.name].input)
@@ -81,27 +71,27 @@ class TreeModelBuilder:
                 elif len(self.node_dict[name].children) > 1:
                     concatenate_layer_list = []
                     for child_node in self.node_dict[name].children:
-                        print("Get child layer: " + child_node.name)
-                        print(type(self.layer_dict[child_node.name]))
+                        self.__print_log("Get child layer: " + child_node.name)
+                        self.__print_log(type(self.layer_dict[child_node.name]))
 
                         if "InputLayer" in str(type(self.layer_dict[child_node.name])):
                             concatenate_layer_list.append(self.layer_dict[child_node.name].input)
                             self.inputs.append(self.layer_dict[child_node.name].input)
                         else:
                             concatenate_layer_list.append(self.layer_dict[child_node.name])
-                    print(concatenate_layer_list)
+                    self.__print_log(concatenate_layer_list)
                     output_node = tf.keras.layers.concatenate(concatenate_layer_list)
                 else:
                     output_node = parent_layer
                 self.layer_dict[name] = output_node
-                print("***********************************************")
+                self.__print_log("***********************************************")
 
         root_node = None
         for node_name in self.node_dict:
             if self.node_dict[node_name].is_root:
                 root_node = self.node_dict[node_name]
                 self.root_node_name = node_name
-                print(RenderTree(self.node_dict[node_name]))
+                self.__print_log(RenderTree(self.node_dict[node_name]), debug=True)
 
         # for child_node in root_node.children:
         #     print(len(root_node.children))
@@ -109,20 +99,28 @@ class TreeModelBuilder:
 
         levels = [[node.name for node in children] for children in LevelOrderGroupIter(root_node)]
         levels.reverse()
-        print(levels)
-        print("###############################################")
+        self.__print_log(levels)
+        self.__print_log("###############################################")
 
         for level in levels:
             _build_level(level)
-        print("###############################################")
+        self.__print_log("###############################################")
 
     def _build_model(self):
         self.outputs.append(self.layer_dict[self.root_node_name])
-        print(self.inputs)
-        print(self.outputs)
+        self.__print_log(self.inputs)
+        self.__print_log(self.outputs)
         self.model = tf.keras.Model(inputs=self.inputs, outputs=self.outputs)
         self.model.summary()
 
+    def _compile(self):
+        optimizer = self.yaml_config["config"]["optimizer"]
+        loss = self.yaml_config["config"]["loss"]
+        metrics = self.yaml_config["config"]["metrics"]
+        self.model.compile(optimizer=optimizer,
+                           loss=loss,
+                           metrics=metrics)
 
-if __name__ == "__main__":
-    builder = TreeModelBuilder("my_model.yaml")
+    def get_model(self):
+        return self.model
+

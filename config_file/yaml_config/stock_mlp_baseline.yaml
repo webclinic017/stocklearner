@@ -1,0 +1,133 @@
+config:
+  layers:
+    - class_name: InputLayer
+      inbound_layer: [null]
+      config:
+        name: main_input
+        input_shape: !!python/tuple [8]
+        dtype: float32
+        input_tensor: null
+        sparse: false
+    - class_name: Dense
+      inbound_layer: [main_input]
+      config:
+        name: dense1
+        units: 50
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      inbound_layer: [dense1]
+      config:
+        name: dense2
+        units: 40
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      inbound_layer: [dense2]
+      config:
+        name: dense3
+        units: 30
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      inbound_layer: [dense3]
+      config:
+        name: dense4
+        units: 20
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      inbound_layer: [dense4]
+      config:
+        name: dense5
+        units: 10
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      inbound_layer: [dense5]
+      config:
+        name: main_output
+        units: 8
+        activation: softmax
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+  optimizer: rmsprop
+  loss: categorical_crossentropy
+  metrics: [accuracy]
