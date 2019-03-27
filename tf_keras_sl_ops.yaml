@@ -1,6 +1,6 @@
 dataset:
-  training_data_path: ./test_data/stock/
-  eval_data_path: ./test_data/stock/
+  training_data_path: /home/a1exff/Output/Train
+  eval_data_path: /home/a1exff/Output/Test
   batch_size: 128
   repeat_time: -1
 model:
