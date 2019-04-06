@@ -1,56 +1,60 @@
 import tensorflow as tf
-#
-# input_layer = tf.keras.layers.InputLayer(input_shape=[None,64], )
-#
-# main_input = tf.keras.layers.Input(shape=(100,), dtype='int32', name='main_input')
+# Naive LSTM to learn three-char time steps to one-char mapping
+import numpy
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import LSTM
 
-BOUNDARIES = [-7, -5, -3, 0, 3, 5, 7]
+# fix random seed for reproducibility
+numpy.random.seed(7)
+# define the raw dataset
+alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-# tf.enable_eager_execution()
+# create mapping of characters to integers (0-25) and the reverse
+char_to_int = dict((c, i) for i, c in enumerate(alphabet))
+int_to_char = dict((i, c) for i, c in enumerate(alphabet))
 
-# with tf.device("/cpu:0"):
-#     x = tf.constant([-7.0, -10.7, -1.1, -2, -3, 0, 0, 7, 8, 9.6, 10.1])
-#     x = tf.constant([-10., -9., -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-#     OUTPUT_SIZE = 8
-#     DIVIDE_BY = 3
-#     s = tf.shape(x)
-#     t = tf.add(x, 11)
-#     t = tf.divide(t, DIVIDE_BY)
-#     t = tf.round(t)
-#     t = tf.cast(t, dtype=tf.int64)
-#     one_hot_label = tf.reshape(tf.one_hot(t, OUTPUT_SIZE), tf.concat([s, [OUTPUT_SIZE]], axis=0))
-#     print(one_hot_label)
+# prepare the dataset of input to output pairs encoded as integers
+seq_length = 3
+dataX = []
+dataY = []
 
-# Instantiate a Keras inception v3 model.
-keras_inception_v3 = tf.keras.applications.inception_v3.InceptionV3(weights=None)
+for i in range(0, len(alphabet) - seq_length, 1):
+    seq_in = alphabet[i:i + seq_length]
+    seq_out = alphabet[i + seq_length]
+    dataX.append([char_to_int[char] for char in seq_in])
+    dataY.append(char_to_int[seq_out])
+    print(seq_in, '->', seq_out)
 
-# Compile model with the optimizer, loss, and metrics you'd like to train with.
-keras_inception_v3.compile(optimizer=tf.keras.optimizers.SGD(lr=0.0001, momentum=0.9),
-                           loss='categorical_crossentropy',
-                           metric='accuracy')
+print(dataX)
+print(dataY)
+# reshape X to be [samples, time steps, features]
+X = numpy.reshape(dataX, (len(dataX), seq_length, 1))
+print(X)
+# normalize
+X = X / float(len(alphabet))
+print(X.shape)
+# one hot encode the output variable
+print(X)
+y = tf.keras.utils.to_categorical(dataY)
+print(y)
+print(y.shape)
+# create and fit the model
+model = Sequential()
+model.add(LSTM(32, input_shape=(X.shape[1], X.shape[2])))
+model.add(Dense(y.shape[1], activation='softmax'))
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+model.fit(X, y, nb_epoch=500, batch_size=1, verbose=2)
 
-# Create an Estimator from the compiled Keras model. Note the initial model
-# state of the keras model is preserved in the created Estimator.
-est_inception_v3 = tf.keras.estimator.model_to_estimator(keras_model=keras_inception_v3)
+# summarize performance of the model
+scores = model.evaluate(X, y, verbose=0)
 
-# Treat the derived Estimator as you would with any other Estimator.
-# First, recover the input name(s) of Keras model, so we can use them as the
-# feature column name(s) of the Estimator input function:
-keras_inception_v3.input_names  # print out: ['input_1']
-keras_inception_v3.summary()
-
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-print(type(x_train))
-print(x_train.shape)
-print(x_train)
-print(y_train)
-# Once we have the input name(s), we can create the input function, for example,
-# for input(s) in the format of numpy ndarray:
-train_input_fn = tf.estimator.inputs.numpy_input_fn(
-    x={"input_1": x_train},
-    y=y_train,
-    num_epochs=1,
-    shuffle=False)
-
-# To train, we call Estimator's train function:
-est_inception_v3.train(input_fn=train_input_fn, steps=2000)
+print("Model Accuracy: %.2f%%" % (scores[1]*100))
+# demonstrate some model predictions
+for pattern in dataX:
+    x = numpy.reshape(pattern, (1, len(pattern), 1))
+    x = x / float(len(alphabet))
+    prediction = model.predict(x, verbose=0)
+    index = numpy.argmax(prediction)
+    result = int_to_char[index]
+    seq_in = [int_to_char[value] for value in pattern]

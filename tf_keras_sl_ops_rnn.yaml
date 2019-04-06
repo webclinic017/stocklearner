@@ -1,0 +1,11 @@
+dataset:
+  training_data_path: /home/a1exff/Output/Train
+  eval_data_path: /home/a1exff/Output/Test
+  batch_size: 128
+  repeat_time: -1
+  time_steps: 10
+model:
+  config_path: ./config_file/yaml_config/stock_rnn_baseline.yaml
+  output_dir: ./output/
+train:
+  steps: 50000
