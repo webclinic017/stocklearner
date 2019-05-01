@@ -3,8 +3,8 @@ import tensorflow as tf
 from os.path import join
 
 #           0       1       2       3        4      5         6               7           8           9
-COLUMNS = ["DATE", "OPEN", "HIGH", "CLOSE", "LOW", "VOLUME", "PRICE_CHANGE", "P_CHANGE", "TURNOVER", "LABEL"]
-FIELD_DEFAULTS = [["null"], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0]]
+BASIC_COLUMNS = ["DATE", "OPEN", "HIGH", "CLOSE", "LOW", "VOLUME", "PRICE_CHANGE", "P_CHANGE", "TURNOVER", "LABEL"]
+BASIC_FIELD_DEFAULTS = [["null"], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0]]
 BOUNDARIES = [-7, -5, -3, 0, 3, 5, 7]
 
 OUTPUT_SIZE = 8
@@ -13,7 +13,7 @@ DIVIDE_BY = 3
 
 def csv_input_fn_estimate_rnn(csv_path, input_name, time_steps, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
     def _parse_line(line):
-        fields = tf.decode_csv(line, FIELD_DEFAULTS)
+        fields = tf.decode_csv(line, BASIC_FIELD_DEFAULTS)
         labels = fields[-1:]
         fields = fields[1:-1]
         fields = tf.reshape(fields, [batch_size, time_steps, -1])
@@ -51,7 +51,7 @@ def csv_input_fn_estimate_rnn(csv_path, input_name, time_steps, batch_size=None,
 
 def csv_input_fn_estimate(csv_path, input_name, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
     def _parse_line(line):
-        fields = tf.decode_csv(line, FIELD_DEFAULTS)
+        fields = tf.decode_csv(line, BASIC_FIELD_DEFAULTS)
         labels = fields[-1:]
         fields = fields[1:-1]
         features = dict(zip(input_name, [fields]))
@@ -84,8 +84,8 @@ def csv_input_fn_estimate(csv_path, input_name, batch_size=None, buffer_size=Non
 
 def csv_input_fn(csv_path, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
     def _parse_line(line):
-        fields = tf.decode_csv(line, FIELD_DEFAULTS)
-        features = dict(zip(COLUMNS, fields))
+        fields = tf.decode_csv(line, BASIC_FIELD_DEFAULTS)
+        features = dict(zip(BASIC_COLUMNS, fields))
         features.pop("DATE")
         label = features.pop("LABEL")
 

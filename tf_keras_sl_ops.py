@@ -1,6 +1,7 @@
 import yaml
 import tensorflow as tf
 from feed import csv_data as stock_data
+from feed.data_schema import CSVDataSchema
 from keras.model.tree_model_builder import TreeModelBuilder
 
 
@@ -14,6 +15,7 @@ if __name__ == "__main__":
     yaml_file = open(APP_CONFIG_FILE_PATH, 'r', encoding='utf-8')
     yaml_config = yaml.load(yaml_file.read())
 
+    schema_config_path = yaml_config["dataset"]["schema_path"]
     training_data_path = yaml_config["dataset"]["training_data_path"]
     eval_data_path = yaml_config["dataset"]["eval_data_path"]
     batch_size = yaml_config["dataset"]["batch_size"]
@@ -36,11 +38,20 @@ if __name__ == "__main__":
     # train_dataset = stock_data.csv_input_fn_estimate(training_data_path, keras_model.input_names, one_hot=True)
     # train_dataset = train_dataset.batch(batch_size).repeat(repeat_time)
 
+    schema = CSVDataSchema(schema_config_path)
+    input_fn = schema.get_input_fn()
+    train_dataset = input_fn(training_data_path,
+                             keras_model.input_names,
+                             time_steps,
+                             batch_size,
+                             one_hot=True)
+
     # RNN
-    train_dataset = stock_data.csv_input_fn_estimate_rnn(training_data_path,
-                                                         keras_model.input_names,
-                                                         time_steps, batch_size,
-                                                         one_hot=True)
+    # train_dataset = stock_data.csv_input_fn_estimate_rnn(training_data_path,
+    #                                                      keras_model.input_names,
+    #                                                      time_steps, batch_size,
+    #                                                      one_hot=True)
+
     train_dataset = train_dataset.repeat(-1)
     # keras training
     keras_model.fit(train_dataset, steps_per_epoch=5000, epochs=50)

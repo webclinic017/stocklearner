@@ -1,0 +1,71 @@
+config:
+  layers:
+    - class_name: InputLayer
+      inbound_layer: [null]
+      config:
+        name: main_input
+        input_shape: !!python/tuple [10, 41]
+        dtype: float32
+        input_tensor: null
+        sparse: false
+    - class_name: LSTM
+      inbound_layer: [main_input]
+      config:
+        name: lstm1
+        units: 64
+        return_sequences: true
+    - class_name: LSTM
+      inbound_layer: [lstm1]
+      config:
+        name: lstm2
+        units: 64
+        return_sequences: true
+    - class_name: LSTM
+      inbound_layer: [lstm2]
+      config:
+        name: lstm3
+        units: 64
+        return_sequences: false
+    - class_name: Dense
+      inbound_layer: [lstm3]
+      config:
+        name: dense
+        units: 64
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      inbound_layer: [dense]
+      config:
+        name: main_output
+        units: 8
+        activation: softmax
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+  optimizer: rmsprop
+  loss: categorical_crossentropy
+  metrics: [accuracy]
