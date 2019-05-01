@@ -1,0 +1,11 @@
+dataset:
+  schema_path: ./config_file/yaml_config/basic_data_schema.yaml
+  training_data_path: /home/a1exff/Output/Train
+  eval_data_path: /home/a1exff/Output/Test
+  batch_size: 128
+  repeat_time: -1
+model:
+  config_path: ./config_file/yaml_config/stock_mlp_baseline.yaml
+  output_dir: ./output/
+train:
+  steps: 50000

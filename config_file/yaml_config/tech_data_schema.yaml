@@ -1,0 +1,91 @@
+train_method: estimate
+output_size: 8
+divided_by: 3
+is_rnn: True
+schema:
+  - field_name: DATE
+    default_value: ["null"]
+  - field_name: OPEN
+    default_value: [0.0]
+  - field_name: HIGH
+    default_value: [0.0]
+  - field_name: CLOSE
+    default_value: [0.0]
+  - field_name: LOW
+    default_value: [0.0]
+  - field_name: VOLUME
+    default_value: [0.0]
+  - field_name: PRICE_CHANGE
+    default_value: [0.0]
+  - field_name: P_CHANGE
+    default_value: [0.0]
+  - field_name: TURNOVER
+    default_value: [0.0]
+  - field_name: KDJ_K
+    default_value: [0.0]
+  - field_name: KDJ_D
+    default_value: [0.0]
+  - field_name: KDJ_J
+    default_value: [0.0]
+  - field_name: MA_5
+    default_value: [0.0]
+  - field_name: MA_10
+    default_value: [0.0]
+  - field_name: MA_20
+    default_value: [0.0]
+  - field_name: RSI_6
+    default_value: [0.0]
+  - field_name: RSI_14
+    default_value: [0.0]
+  - field_name: RSI_24
+    default_value: [0.0]
+  - field_name: WR_14
+    default_value: [0.0]
+  - field_name: WR_6
+    default_value: [0.0]
+  - field_name: BIAS_6
+    default_value: [0.0]
+  - field_name: BIAS_12
+    default_value: [0.0]
+  - field_name: BIAS_24
+    default_value: [0.0]
+  - field_name: CCI
+    default_value: [0.0]
+  - field_name: ROC
+    default_value: [0.0]
+  - field_name: MAROC
+    default_value: [0.0]
+  - field_name: BBI
+    default_value: [0.0]
+  - field_name: BRAR_BR
+    default_value: [0.0]
+  - field_name: BRAR_AR
+    default_value: [0.0]
+  - field_name: PSY_12
+    default_value: [0.0]
+  - field_name: PSY_6
+    default_value: [0.0]
+  - field_name: DMA
+    default_value: [0.0]
+  - field_name: AMA
+    default_value: [0.0]
+  - field_name: BOLL_MID
+    default_value: [0.0]
+  - field_name: BOLL_LOW
+    default_value: [0.0]
+  - field_name: BOLL_UP
+    default_value: [0.0]
+  - field_name: VR
+    default_value: [0.0]
+  - field_name: MACD_DIF
+    default_value: [0.0]
+  - field_name: MACD_DEA
+    default_value: [0.0]
+  - field_name: MACD
+    default_value: [0.0]
+  - field_name: MTM
+    default_value: [0.0]
+  - field_name: MAMTM
+    default_value: [0.0]
+  - field_name: LABEL
+    default_value: [0.0]

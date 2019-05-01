@@ -1,0 +1,104 @@
+config:
+  layers:
+    - class_name: InputLayer
+      inbound_layer: [null]
+      config:
+        name: main_input
+        input_shape: !!python/tuple [null,64]
+        batch_size: 32
+        dtype: float32
+        input_tensor: null
+        sparse: false
+    - class_name: InputLayer
+      inbound_layer: [null]
+      config:
+        name: aux_input
+        input_shape: !!python/tuple [null,8]
+        batch_size: 32
+        dtype: float32
+        input_tensor: null
+        sparse: false
+    - class_name: Dense
+      inbound_layer: [main_input]
+      config:
+        name: dense1
+        units: 64
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Concatenate
+      inbound_layer: [dense1, aux_input]
+      config:
+        name: concat
+    - class_name: Dense
+      inbound_layer: [concat]
+      config:
+        name: dense2
+        units: 32
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      inbound_layer: [dense2]
+      config:
+        name: dense3
+        units: 16
+        activation: relu
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true
+    - class_name: Dense
+      inbound_layer: [dense3]
+      config:
+        name: main_output
+        units: 8
+        activation: sigmoid
+        use_bias: true
+        kernel_initializer:
+          class_name: GlorotUniform
+          config: {dtype: float32, seed: null}
+        bias_initializer:
+          class_name: Zeros
+          config: {dtype: float32}
+        kernel_regularizer: null
+        bias_regularizer: null
+        activity_regularizer: null
+        kernel_constraint: null
+        bias_constraint: null
+        dtype: float32
+        trainable: true

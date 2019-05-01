@@ -1,0 +1,12 @@
+dataset:
+  schema_path: ./config_file/yaml_config/tech_data_schema.yaml
+  training_data_path: /home/a1exff/Output2/Train
+  eval_data_path: /home/a1exff/Output2/Test
+  batch_size: 8
+  repeat_time: -1
+  time_steps: 10
+model:
+  config_path: ./config_file/yaml_config/stock_stack_rnn_baseline.yaml
+  output_dir: ./output/
+train:
+  steps: 50000

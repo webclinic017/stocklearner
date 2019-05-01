@@ -2,3 +2,5 @@ tensorflow
 pandas
 numpy
 backtrader
+pyyaml
+anytree

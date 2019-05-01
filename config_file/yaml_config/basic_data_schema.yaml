@@ -1,0 +1,25 @@
+train_method: estimate
+output_size: 8
+divided_by: 3
+is_rnn: True
+schema:
+  - field_name: DATE
+    default_value: ["null"]
+  - field_name: OPEN
+    default_value: [0.0]
+  - field_name: HIGH
+    default_value: [0.0]
+  - field_name: CLOSE
+    default_value: [0.0]
+  - field_name: LOW
+    default_value: [0.0]
+  - field_name: VOLUME
+    default_value: [0.0]
+  - field_name: PRICE_CHANGE
+    default_value: [0.0]
+  - field_name: P_CHANGE
+    default_value: [0.0]
+  - field_name: TURNOVER
+    default_value: [0.0]
+  - field_name: LABEL
+    default_value: [0.0]
