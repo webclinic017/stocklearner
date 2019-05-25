@@ -27,7 +27,8 @@ if __name__ == "__main__":
     model_config_path = yaml_config["model"]["config_path"]
     model_dir = yaml_config["model"]["output_dir"]
 
-    train_step = yaml_config["train"]["steps"]
+    train_step = yaml_config["train"]["epochs"]
+    steps_per_epoch = yaml_config["train"]["steps_per_epoch"]
 
     # run_config = cl.create_instance("tf.estimator", yaml_config["run_config"])
 
@@ -54,7 +55,7 @@ if __name__ == "__main__":
 
     train_dataset = train_dataset.repeat(-1)
     # keras training
-    keras_model.fit(train_dataset, steps_per_epoch=5000, epochs=50)
+    keras_model.fit(train_dataset, steps_per_epoch=5000, epochs=train_step)
 
     # estimator = tf.keras.estimator.model_to_estimator(keras_model=keras_model, model_dir=model_dir)
     # MLP

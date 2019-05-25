@@ -1,0 +1,343 @@
+import tensorflow as tf
+# from keras.model.layer.attention_layer import SelfAttention
+from keras.model.layer.ffn_layer import FeedFowardNetwork
+from keras.model.layer.model_utils import get_padding_bias
+import yaml
+from feed.data_schema import CSVDataSchema
+
+APP_CONFIG_FILE_PATH = "./tf_keras_sl_ops_rnn.yaml"
+
+
+class TBuilder:
+    def __init__(self, params):
+        self.params = params
+        # input shape -> [time_step, feature_length]
+        self.encode_inputs = tf.keras.layers.Input(shape=[10, 8], batch_size=32, name="encode_inputs")
+        print("TBuilder->__init__:self.inputs")
+        print(self.encode_inputs)
+        self.encode_stack = EncodeStack(params)
+        self.decode_stack = DecodeStack(params)
+
+        self.encode_output = self.encode(self.encode_inputs)
+        self.decode_output = self.decode(self.encode_output)
+        self.model = tf.keras.Model(inputs=self.encode_inputs, outputs=self.decode_output)
+
+        self.model.compile(optimizer='rmsprop',
+                           loss='categorical_crossentropy',
+                           metrics=['accuracy'])
+        self.model.summary()
+
+    def get_model(self):
+        return self.model
+
+    def encode(self, inputs):
+        inputs = tf.keras.layers.Dense(self.params["hidden_size"])(inputs)
+        print("TBuilder->encoder:inputs")
+        print(inputs)
+        return self.encode_stack(inputs)
+
+    def decode(self, inputs):
+        return inputs
+
+
+class DecodeStack(tf.keras.layers.Layer):
+    def __init__(self, params):
+        super(DecodeStack, self).__init__()
+        self.params = params
+
+
+class EncodeStack(tf.keras.layers.Layer):
+    def __init__(self, params):
+        super(EncodeStack, self).__init__()
+        self.params = params
+        self.layers = []
+
+        for _ in range(params["num_hidden_layers"]):
+            # Create sublayers for each layer.
+            self_attention_layer = SelfAttention(
+                params["hidden_size"], params["num_heads"],
+                params["attention_dropout"], params['train'])
+            feed_forward_network = FeedFowardNetwork(
+                params["hidden_size"], params["filter_size"],
+                params["relu_dropout"], params['train'], params["allow_ffn_pad"])
+
+            self.layers.append([PrePostProcessingWrapper(self_attention_layer, params),
+                                PrePostProcessingWrapper(feed_forward_network, params)])
+
+        # Create final layer normalization layer.
+        self.output_normalization = LayerNormalization(params["hidden_size"])
+
+    def call(self, inputs):
+        print("EncodeStack->call:inputs")
+        print(inputs)
+        attention_bias = get_attention_bias(inputs)
+        print("EncodeStack->call:attention_bias")
+        print(attention_bias)
+        # inputs_padding = None
+
+        for n, layer in enumerate(self.layers):
+            # Run inputs through the sublayers.
+            self_attention_layer = layer[0]
+            feed_forward_network = layer[1]
+
+            with tf.variable_scope("layer_%d" % n):
+                with tf.variable_scope("self_attention"):
+                    inputs = self_attention_layer(inputs, bias=attention_bias)
+                    # inputs = self_attention_layer(inputs)
+                with tf.variable_scope("ffn"):
+                    inputs = feed_forward_network(inputs)
+
+        return self.output_normalization(inputs)
+
+
+class PrePostProcessingWrapper(tf.keras.layers.Layer):
+    def __init__(self, layer, params):
+        super(PrePostProcessingWrapper, self).__init__()
+        self.layer = layer
+        self.postprocess_dropout = params["layer_postprocess_dropout"]
+        self.train = params["train"]
+
+        # Create normalization layer
+        self.layer_norm = LayerNormalization(params["hidden_size"])
+
+    def call(self, x, *args, **kwargs):
+        # Preprocessing: apply layer normalization
+        y = self.layer_norm(x)
+
+        # Get layer output
+        y = self.layer(y, *args, **kwargs)
+
+        # Postprocessing: apply dropout and residual connection
+        if self.train:
+            y = tf.nn.dropout(y, 1 - self.postprocess_dropout)
+        return x + y
+
+
+class LayerNormalization(tf.keras.layers.Layer):
+    def __init__(self, hidden_size):
+        super(LayerNormalization, self).__init__()
+        self.hidden_size = hidden_size
+
+    def build(self, _):
+        self.scale = tf.get_variable("layer_norm_scale", [self.hidden_size],
+                                     initializer=tf.ones_initializer())
+        self.bias = tf.get_variable("layer_norm_bias", [self.hidden_size],
+                                    initializer=tf.zeros_initializer())
+        self.built = True
+
+    def call(self, x, epsilon=1e-6):
+        mean = tf.reduce_mean(x, axis=[-1], keepdims=True)
+        variance = tf.reduce_mean(tf.square(x - mean), axis=[-1], keepdims=True)
+        norm_x = (x - mean) * tf.rsqrt(variance + epsilon)
+        return norm_x * self.scale + self.bias
+
+
+class Attention(tf.keras.layers.Layer):
+    """Multi-headed attention layer."""
+
+    def __init__(self, hidden_size, num_heads, attention_dropout, train):
+        if hidden_size % num_heads != 0:
+            raise ValueError("Hidden size must be evenly divisible by the number of "
+                             "heads.")
+
+        super(Attention, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_heads = num_heads
+        self.attention_dropout = attention_dropout
+        self.train = train
+
+        # Layers for linearly projecting the queries, keys, and values.
+        self.q_dense_layer = tf.layers.Dense(hidden_size, use_bias=False, name="q")
+        self.k_dense_layer = tf.layers.Dense(hidden_size, use_bias=False, name="k")
+        self.v_dense_layer = tf.layers.Dense(hidden_size, use_bias=False, name="v")
+
+        self.output_dense_layer = tf.layers.Dense(hidden_size, use_bias=False,
+                                                  name="output_transform")
+
+    def split_heads(self, x):
+        """Split x into different heads, and transpose the resulting value.
+
+        The tensor is transposed to insure the inner dimensions hold the correct
+        values during the matrix multiplication.
+
+        Args:
+          x: A tensor with shape [batch_size, length, hidden_size]
+
+        Returns:
+          A tensor with shape [batch_size, num_heads, length, hidden_size/num_heads]
+        """
+        with tf.name_scope("split_heads"):
+            batch_size = tf.shape(x)[0]
+            length = tf.shape(x)[1]
+
+            # Calculate depth of last dimension after it has been split.
+            depth = (self.hidden_size // self.num_heads)
+
+            # Split the last dimension
+            x = tf.reshape(x, [batch_size, length, self.num_heads, depth])
+
+            # Transpose the result
+            return tf.transpose(x, [0, 2, 1, 3])
+
+    def combine_heads(self, x):
+        """Combine tensor that has been split.
+
+        Args:
+          x: A tensor [batch_size, num_heads, length, hidden_size/num_heads]
+
+        Returns:
+          A tensor with shape [batch_size, length, hidden_size]
+        """
+        with tf.name_scope("combine_heads"):
+            batch_size = tf.shape(x)[0]
+            length = tf.shape(x)[2]
+            x = tf.transpose(x, [0, 2, 1, 3])  # --> [batch, length, num_heads, depth]
+            return tf.reshape(x, [batch_size, length, self.hidden_size])
+
+    def call(self, x, y, bias, cache=None):
+        """Apply attention mechanism to x and y.
+
+        Args:
+          x: a tensor with shape [batch_size, length_x, hidden_size]
+          y: a tensor with shape [batch_size, length_y, hidden_size]
+          bias: attention bias that will be added to the result of the dot product.
+          cache: (Used during prediction) dictionary with tensors containing results
+            of previous attentions. The dictionary must have the items:
+                {"k": tensor with shape [batch_size, i, key_channels],
+                 "v": tensor with shape [batch_size, i, value_channels]}
+            where i is the current decoded length.
+
+        Returns:
+          Attention layer output with shape [batch_size, length_x, hidden_size]
+        """
+        # Linearly project the query (q), key (k) and value (v) using different
+        # learned projections. This is in preparation of splitting them into
+        # multiple heads. Multi-head attention uses multiple queries, keys, and
+        # values rather than regular attention (which uses a single q, k, v).
+        q = self.q_dense_layer(x)
+        k = self.k_dense_layer(y)
+        v = self.v_dense_layer(y)
+
+        if cache is not None:
+            # Combine cached keys and values with new keys and values.
+            k = tf.concat([cache["k"], k], axis=1)
+            v = tf.concat([cache["v"], v], axis=1)
+
+            # Update cache
+            cache["k"] = k
+            cache["v"] = v
+
+        # Split q, k, v into heads.
+        q = self.split_heads(q)
+        k = self.split_heads(k)
+        v = self.split_heads(v)
+
+        # Scale q to prevent the dot product between q and k from growing too large.
+        depth = (self.hidden_size // self.num_heads)
+        q *= depth ** -0.5
+
+        # Calculate dot product attention
+        logits = tf.matmul(q, k, transpose_b=True)
+        print("Attention->call:logits")
+        print(logits)
+        logits += bias
+        weights = tf.nn.softmax(logits, name="attention_weights")
+        if self.train:
+            weights = tf.nn.dropout(weights, 1.0 - self.attention_dropout)
+        attention_output = tf.matmul(weights, v)
+
+        # Recombine heads --> [batch_size, length, hidden_size]
+        attention_output = self.combine_heads(attention_output)
+
+        # Run the combined outputs through another linear projection layer.
+        attention_output = self.output_dense_layer(attention_output)
+        return attention_output
+
+
+class SelfAttention(Attention):
+    """Multiheaded self-attention layer."""
+
+    def call(self, x, bias, cache=None):
+        return super(SelfAttention, self).call(x, x, bias, cache)
+
+
+def get_attention_bias(inputs):
+    print("get_attention_bias:inputs")
+    print(inputs.shape)
+    batch_size = inputs.shape[0]
+    time_step = inputs.shape[1]
+
+    attention_bias = tf.get_variable("attention_bias",
+                           shape=[batch_size, time_step],
+                           initializer=tf.initializers.constant(value=0))
+    attention_bias = tf.expand_dims(
+        tf.expand_dims(attention_bias, axis=1), axis=1)
+    return attention_bias
+
+
+if __name__ == "__main__":
+    # [time_steps, feature_length]
+    p = dict()
+    p["batch_size"] = 64
+    p["time_steps"] = 5
+    p["input_length"] = 10
+    p["vocab_size"] = 33708
+    p["num_hidden_layers"] = 6
+    p["num_heads"] = 8
+    p["hidden_size"] = 512
+    p["attention_dropout"] = 0.1
+    p["relu_dropout"] = 0.1
+    p["filter_size"] = 2048
+    p["allow_ffn_pad"] = True
+    p["layer_postprocess_dropout"] = 0.1
+    p["train"] = True
+    p["initializer_gain"] = 1.0
+
+    b = TBuilder(p)
+    m = b.get_model()
+
+    # inputs = tf.keras.layers.Input(shape=(784,))
+    #
+    # print(type(inputs))
+    # x = tf.keras.layers.Dense(64, activation='relu')(inputs)
+    # print(type(x))
+    # x = tf.keras.layers.Dense(64, activation='relu')(x)
+    # print(type(x))
+    # predictions = tf.keras.layers.Dense(10, activation='softmax')(x)
+    # print(type(x))
+
+    tf.enable_eager_execution()
+
+    # x = tf.keras.layers.Input(shape=[p["input_length"]], batch_size=p["batch_size"], dtype=tf.int64)
+    # print(x)
+    # shared_weights = tf.get_variable(
+    #     "weights", [p["vocab_size"], p["hidden_size"]],
+    #     initializer=tf.random_normal_initializer(
+    #         0., p["hidden_size"] ** -0.5))
+    # print(shared_weights)
+    # mask = tf.to_float(tf.not_equal(x, 0))
+    # print(mask)
+    # embeddings = tf.gather(shared_weights, x)  # [self.vocab_size, self.hidden_size],
+    # print("*********************************")
+    # print(embeddings)
+    # embeddings *= tf.expand_dims(mask, -1)
+    # print("*********************************")
+    # print(embeddings)
+    # # Scale embedding by the sqrt of the hidden size
+    # embeddings *= p["hidden_size"] ** 0.5
+    # print("*********************************")
+    # print(embeddings)
+    # print(tf.expand_dims(mask, -1))
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    a = tf.get_variable("a", shape=[8, 4], initializer=tf.random_normal_initializer(0., 4 ** -0.5))
+    # b = tf.get_variable("b", shape=[6, 5], dtype=tf.int64)
+    b = [[1, 0, 0, 0, 0],
+         [0, 1, 0, 0, 0],
+         [0, 0, 1, 0, 0],
+         [0, 0, 0, 1, 0],
+         [0, 0, 0, 0, 1],
+         [1, 0, 1, 0, 1]]
+    print(a)
+    print(b)
+    print(tf.gather(a, b))
+    print(get_padding_bias(b))

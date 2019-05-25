@@ -36,10 +36,10 @@ class Attention(tf.keras.layers.Layer):
         self.train = train
 
         # Layers for linearly projecting the queries, keys, and values.
-        self.q_dense_layer = tf.layers.Dense(hidden_size, use_bias=False, name="q")
-        self.k_dense_layer = tf.layers.Dense(hidden_size, use_bias=False, name="k")
-        self.v_dense_layer = tf.layers.Dense(hidden_size, use_bias=False, name="v")
-        self.output_dense_layer = tf.layers.Dense(hidden_size, use_bias=False, name="output_transform")
+        self.q_dense_layer = tf.keras.layers.Dense(hidden_size, use_bias=False, name="q")
+        self.k_dense_layer = tf.keras.layers.Dense(hidden_size, use_bias=False, name="k")
+        self.v_dense_layer = tf.keras.layers.Dense(hidden_size, use_bias=False, name="v")
+        self.output_dense_layer = tf.keras.layers.Dense(hidden_size, use_bias=False, name="output_transform")
 
     def split_heads(self, x):
         """Split x into different heads, and transpose the resulting value.
@@ -125,10 +125,12 @@ class Attention(tf.keras.layers.Layer):
 
         # Calculate dot product attention
         logits = tf.matmul(q, k, transpose_b=True)
-        logits += bias
+        # logits += bias
+        # weights = tf.keras.layers.Softmax(logits, name="attention_weights")
         weights = tf.nn.softmax(logits, name="attention_weights")
-        if self.train:
-            weights = tf.nn.dropout(weights, 1.0 - self.attention_dropout)
+        # if self.train:
+        #     weights = tf.keras.layers.Dropout(weights, 1.0 - self.attention_dropout)
+        #     # weights = tf.nn.dropout(weights, 1.0 - self.attention_dropout)
         attention_output = tf.matmul(weights, v)
 
         # Recombine heads --> [batch_size, length, hidden_size]
@@ -142,5 +144,5 @@ class Attention(tf.keras.layers.Layer):
 class SelfAttention(Attention):
     """Multiheaded self-attention layer."""
 
-    def call(self, x, bias, cache=None):
+    def call(self, x, bias=None, cache=None):
         return super(SelfAttention, self).call(x, x, bias, cache)

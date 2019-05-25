@@ -22,11 +22,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf  # pylint: disable=g-bad-import-order
+import tensorflow as tf
 
 from keras.model.layer import attention_layer
 from keras.model.layer import beam_search
-from keras.model.layer import embedding_layer
+# from keras.model.layer import embedding_layer
 from keras.model.layer import ffn_layer
 from keras.model.layer import model_utils
 from keras.model.util.tokenizer import EOS_ID
@@ -34,7 +34,7 @@ from keras.model.util.tokenizer import EOS_ID
 _NEG_INF = -1e9
 
 
-class Transformer(object):
+class Transformer(tf.keras.Model):
     """Transformer model for sequence to sequence data.
 
     Implemented as described in: https://arxiv.org/pdf/1706.03762.pdf
@@ -45,7 +45,7 @@ class Transformer(object):
     probabilities for the output sequence.
     """
 
-    def __init__(self, params, train):
+    def __init__(self, params):
         """Initialize layers to build Transformer model.
 
         Args:
@@ -53,16 +53,16 @@ class Transformer(object):
           train: boolean indicating whether the model is in training mode. Used to
             determine if dropout layers should be added.
         """
-        self.train = train
+        super(Transformer, self).__init__()
         self.params = params
 
-        self.embedding_softmax_layer = embedding_layer.EmbeddingSharedWeights(
-            params["vocab_size"], params["hidden_size"],
-            method="matmul" if params["tpu"] else "gather")
-        self.encoder_stack = EncoderStack(params, train)
-        self.decoder_stack = DecoderStack(params, train)
+        # self.embedding_softmax_layer = embedding_layer.EmbeddingSharedWeights(
+        #     params["vocab_size"], params["hidden_size"],
+        #     method="gather")
+        self.encoder_stack = EncoderStack(params)
+        self.decoder_stack = DecoderStack(params)
 
-    def __call__(self, inputs, targets=None):
+    def call(self, inputs, ):
         """Calculate target logits or inferred target sequences.
 
         Args:
@@ -92,11 +92,12 @@ class Transformer(object):
 
             # Generate output sequence if targets is None, or return logits if target
             # sequence is known.
-            if targets is None:
-                return self.predict(encoder_outputs, attention_bias)
-            else:
-                logits = self.decode(targets, encoder_outputs, attention_bias)
-                return logits
+            return self.predict(encoder_outputs, attention_bias)
+            # if targets is None:
+            #     return self.predict(encoder_outputs, attention_bias)
+            # else:
+            #     logits = self.decode(targets, encoder_outputs, attention_bias)
+            #     return logits
 
     def encode(self, inputs, attention_bias):
         """Generate continuous representation for inputs.
@@ -111,18 +112,19 @@ class Transformer(object):
         with tf.name_scope("encode"):
             # Prepare inputs to the layer stack by adding positional encodings and
             # applying dropout.
-            embedded_inputs = self.embedding_softmax_layer(inputs)
+            embedded_inputs = tf.keras.layers.Dense(self.params["hidden_size"])(inputs)
             inputs_padding = model_utils.get_padding(inputs)
+            encoder_inputs = embedded_inputs
 
-            with tf.name_scope("add_pos_encoding"):
-                length = tf.shape(embedded_inputs)[1]
-                pos_encoding = model_utils.get_position_encoding(
-                    length, self.params["hidden_size"])
-                encoder_inputs = embedded_inputs + pos_encoding
+            # with tf.name_scope("add_pos_encoding"):
+            #     length = tf.shape(embedded_inputs)[1]
+            #     pos_encoding = model_utils.get_position_encoding(
+            #         length, self.params["hidden_size"])
+            #     encoder_inputs = embedded_inputs + pos_encoding
 
-            if self.train:
-                encoder_inputs = tf.nn.dropout(
-                    encoder_inputs, 1 - self.params["layer_postprocess_dropout"])
+            # if self.train:
+            #     encoder_inputs = tf.nn.dropout(
+            #         encoder_inputs, 1 - self.params["layer_postprocess_dropout"])
 
             return self.encoder_stack(encoder_inputs, attention_bias, inputs_padding)
 
@@ -268,10 +270,10 @@ class LayerNormalization(tf.keras.layers.Layer):
 class PrePostProcessingWrapper(object):
     """Wrapper class that applies layer pre-processing and post-processing."""
 
-    def __init__(self, layer, params, train):
+    def __init__(self, layer, params):
         self.layer = layer
         self.postprocess_dropout = params["layer_postprocess_dropout"]
-        self.train = train
+        self.train = params["train"]
 
         # Create normalization layer
         self.layer_norm = LayerNormalization(params["hidden_size"])
@@ -298,21 +300,21 @@ class EncoderStack(tf.keras.layers.Layer):
       2. Feedforward network (which is 2 fully-connected layers)
     """
 
-    def __init__(self, params, train):
+    def __init__(self, params):
         super(EncoderStack, self).__init__()
         self.layers = []
         for _ in range(params["num_hidden_layers"]):
             # Create sublayers for each layer.
             self_attention_layer = attention_layer.SelfAttention(
                 params["hidden_size"], params["num_heads"],
-                params["attention_dropout"], train)
+                params["attention_dropout"], params["train"])
             feed_forward_network = ffn_layer.FeedFowardNetwork(
                 params["hidden_size"], params["filter_size"],
-                params["relu_dropout"], train, params["allow_ffn_pad"])
+                params["relu_dropout"], params["train"], params["allow_ffn_pad"])
 
             self.layers.append([
-                PrePostProcessingWrapper(self_attention_layer, params, train),
-                PrePostProcessingWrapper(feed_forward_network, params, train)])
+                PrePostProcessingWrapper(self_attention_layer, params),
+                PrePostProcessingWrapper(feed_forward_network, params)])
 
         # Create final layer normalization layer.
         self.output_normalization = LayerNormalization(params["hidden_size"])
@@ -355,24 +357,24 @@ class DecoderStack(tf.keras.layers.Layer):
       3. Feedforward network (2 fully-connected layers)
     """
 
-    def __init__(self, params, train):
+    def __init__(self, params):
         super(DecoderStack, self).__init__()
         self.layers = []
         for _ in range(params["num_hidden_layers"]):
             self_attention_layer = attention_layer.SelfAttention(
                 params["hidden_size"], params["num_heads"],
-                params["attention_dropout"], train)
+                params["attention_dropout"], params["train"])
             enc_dec_attention_layer = attention_layer.Attention(
                 params["hidden_size"], params["num_heads"],
-                params["attention_dropout"], train)
+                params["attention_dropout"], params["train"])
             feed_forward_network = ffn_layer.FeedFowardNetwork(
                 params["hidden_size"], params["filter_size"],
-                params["relu_dropout"], train, params["allow_ffn_pad"])
+                params["relu_dropout"], params["train"], params["allow_ffn_pad"])
 
             self.layers.append([
-                PrePostProcessingWrapper(self_attention_layer, params, train),
-                PrePostProcessingWrapper(enc_dec_attention_layer, params, train),
-                PrePostProcessingWrapper(feed_forward_network, params, train)])
+                PrePostProcessingWrapper(self_attention_layer, params),
+                PrePostProcessingWrapper(enc_dec_attention_layer, params),
+                PrePostProcessingWrapper(feed_forward_network, params)])
 
         self.output_normalization = LayerNormalization(params["hidden_size"])
 
@@ -418,4 +420,19 @@ class DecoderStack(tf.keras.layers.Layer):
 
 
 if __name__ == "__main__":
-    transformer = Transformer()
+    p = dict()
+    p["vocab_size"] = 33708
+    p["num_hidden_layers"] = 6
+    p["num_heads"] = 8
+    p["hidden_size"] = 512
+    p["attention_dropout"] = 0.1
+    p["relu_dropout"] = 0.1
+    p["filter_size"] = 2048
+    p["allow_ffn_pad"] = True
+    p["layer_postprocess_dropout"] = 0.1
+    p["train"] = True
+    p["initializer_gain"] = 1.0
+    i = tf.keras.layers.Input(shape=[10, 8], batch_size=32)
+    model = Transformer(p)(i)
+    model.complie()
+    model.summary()

@@ -18,7 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf  # pylint: disable=g-bad-import-order
+import tensorflow as tf
 
 from keras.model.layer import model_utils
 # from official.utils.accelerator import tpu as tpu_utils
@@ -71,19 +71,8 @@ class EmbeddingSharedWeights(tf.keras.layers.Layer):
         with tf.name_scope("embedding"):
             # Create binary mask of size [batch_size, length]
             mask = tf.to_float(tf.not_equal(x, 0))
-
-            if self.method == "gather":
-                embeddings = tf.gather(self.shared_weights, x)
-                embeddings *= tf.expand_dims(mask, -1)
-            else:  # matmul
-                embeddings = tpu_utils.embedding_matmul(
-                    embedding_table=self.shared_weights,
-                    values=tf.cast(x, dtype=tf.int32),
-                    mask=mask
-                )
-                # embedding_matmul already zeros out masked positions, so
-                # `embeddings *= tf.expand_dims(mask, -1)` is unnecessary.
-
+            embeddings = tf.gather(self.shared_weights, x)  # [self.vocab_size, self.hidden_size],
+            embeddings *= tf.expand_dims(mask, -1)
             # Scale embedding by the sqrt of the hidden size
             embeddings *= self.hidden_size ** 0.5
 
