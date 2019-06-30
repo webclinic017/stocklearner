@@ -1,6 +1,6 @@
 dataset:
-  schema_path: ./config_file/yaml_config/tech_data_schema.yaml
-  training_data_path: /home/a1exff/Output2/Train
+  schema_path: ./config_file/yaml_config/basic_data_schema.yaml
+  training_data_path: /home/a1exff/Experiment/sse50
   eval_data_path: /home/a1exff/Output2/Test
   batch_size: 64
   repeat_time: -1
@@ -8,7 +8,14 @@ dataset:
 model:
   config_path: ./config_file/yaml_config/stock_stack_rnn_baseline.yaml
   output_dir: ./output/
-train:
-  epochs: 10000
-  steps_per_epoch: 5000
+  log_dir: ./logs
+run:
+  for: train # values: train, evaluate, predict
+  use: keras # values: keras, estimator
+  train:
+    epochs: 10000
+    steps_per_epoch: 50
+  eval:
+    epochs: 1000
+
 

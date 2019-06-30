@@ -7,6 +7,8 @@ from feed.data_schema import CSVDataSchema
 
 APP_CONFIG_FILE_PATH = "./tf_keras_sl_ops_rnn.yaml"
 
+tf.enable_eager_execution()
+
 
 class TBuilder:
     def __init__(self, params):

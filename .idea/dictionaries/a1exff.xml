@@ -17,10 +17,12 @@
       <w>preprocess</w>
       <w>preprocessing</w>
       <w>relu</w>
+      <w>savedmodel</w>
       <w>softmax</w>
       <w>sublayers</w>
       <w>subtoken</w>
       <w>subtokenizer</w>
+      <w>tensorboard</w>
       <w>tensorflow</w>
     </words>
   </dictionary>

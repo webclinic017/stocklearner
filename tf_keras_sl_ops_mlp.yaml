@@ -7,6 +7,12 @@ dataset:
 model:
   config_path: ./config_file/yaml_config/stock_mlp_baseline.yaml
   output_dir: ./output/
-train:
-  epochs: 10000
-  steps_per_epoch: 5000
+  log_dir: ./logs
+run:
+  for: train # values: train, evaluate, predict
+  use: keras # values: keras, estimator
+  train:
+    epochs: 10000
+    steps_per_epoch: 5000
+  eval:
+    epochs: 1000

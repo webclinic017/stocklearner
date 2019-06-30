@@ -4,7 +4,7 @@ config:
       inbound_layer: [null]
       config:
         name: main_input
-        input_shape: !!python/tuple [10, 41]
+        input_shape: !!python/tuple [10, 8]
         dtype: float32
         input_tensor: null
         sparse: false
