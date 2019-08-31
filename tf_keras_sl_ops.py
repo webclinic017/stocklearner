@@ -41,7 +41,7 @@ def train():
 
     if train_use == "keras":
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, batch_size=batch_size)
-        savedmodel_callback = SavedModelCallback(model_dir, save_best_only=True)
+        savedmodel_callback = SavedModelCallback(model_dir)
 
         # MLP
         # train_dataset = stock_data.csv_input_fn_estimate(training_data_path, keras_model.input_names, one_hot=True)

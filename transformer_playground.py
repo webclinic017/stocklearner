@@ -1,9 +1,7 @@
 import tensorflow as tf
+
 # from keras.model.layer.attention_layer import SelfAttention
 from keras.model.layer.ffn_layer import FeedFowardNetwork
-from keras.model.layer.model_utils import get_padding_bias
-import yaml
-from feed.data_schema import CSVDataSchema
 
 APP_CONFIG_FILE_PATH = "./tf_keras_sl_ops_rnn.yaml"
 
@@ -15,14 +13,26 @@ class TBuilder:
         self.params = params
         # input shape -> [time_step, feature_length]
         self.encode_inputs = tf.keras.layers.Input(shape=[10, 8], batch_size=32, name="encode_inputs")
-        print("TBuilder->__init__:self.inputs")
+        self.decode_inputs = tf.keras.layers.Input(shape=[10, 21], batch_size=32, name="decode_inputs")
+
+        self.params["attention_bias"] = get_attention_bias(self.encode_inputs)
+
+        print("TBuilder->__init__:self.encode_inputs")
         print(self.encode_inputs)
+
+        print("TBuilder->__init__:self.target_inputs")
+        print(self.decode_inputs)
+
         self.encode_stack = EncodeStack(params)
         self.decode_stack = DecodeStack(params)
 
         self.encode_output = self.encode(self.encode_inputs)
-        self.decode_output = self.decode(self.encode_output)
-        self.model = tf.keras.Model(inputs=self.encode_inputs, outputs=self.decode_output)
+        print("TBuilder->__init__:self.encode passed")
+        print("TBuilder->__init__:self.encode_output")
+        print(self.encode_output)
+        self.decode_output = self.decode(self.decode_inputs, self.encode_output)
+        print("TBuilder->__init__:self.decode passed")
+        self.model = tf.keras.Model(inputs=[self.encode_inputs, self.decode_inputs], outputs=self.decode_output)
 
         self.model.compile(optimizer='rmsprop',
                            loss='categorical_crossentropy',
@@ -38,14 +48,93 @@ class TBuilder:
         print(inputs)
         return self.encode_stack(inputs)
 
-    def decode(self, inputs):
-        return inputs
+    def decode(self, target_inputs, encoder_outputs):
+        print("TBuilder->decoder:target_inputs")
+        print(target_inputs)
+
+        print("TBuilder->decoder:encoder_outputs")
+        print(encoder_outputs)
+
+        inputs = tf.keras.layers.Dense(self.params["hidden_size"])(target_inputs)
+
+        print("TBuilder->decoder:inputs")
+        print(inputs)
+
+        # Run values
+        length = tf.shape(inputs)[1]
+        decoder_self_attention_bias = get_decoder_self_attention_bias(length)
+
+        print("TBuilder->decoder:decoder_self_attention_bias")
+        print(decoder_self_attention_bias)
+        outputs = self.decode_stack(inputs,
+                                    encoder_outputs=encoder_outputs,
+                                    decoder_self_attention_bias=decoder_self_attention_bias)
+        print("#############################################")
+        logits = tf.keras.layers.Dense(target_inputs.shape[-1], activation="softmax")(outputs)
+        return logits
+        # return outputs
 
 
 class DecodeStack(tf.keras.layers.Layer):
     def __init__(self, params):
         super(DecodeStack, self).__init__()
         self.params = params
+        self.layers = []
+        for _ in range(params["num_hidden_layers"]):
+            self_attention_layer = SelfAttention(
+                params["hidden_size"], params["num_heads"],
+                params["attention_dropout"], params['train'])
+            enc_dec_attention_layer = Attention(
+                params["hidden_size"], params["num_heads"],
+                params["attention_dropout"], params['train'])
+            feed_forward_network = FeedFowardNetwork(
+                params["hidden_size"], params["filter_size"],
+                params["relu_dropout"], params['train'], params["allow_ffn_pad"])
+
+        self.layers.append([
+            PrePostProcessingWrapper(self_attention_layer, params),
+            PrePostProcessingWrapper(enc_dec_attention_layer, params),
+            PrePostProcessingWrapper(feed_forward_network, params)])
+
+        self.output_normalization = LayerNormalization(params["hidden_size"])
+
+    # def call(self, decoder_inputs, encoder_outputs, decoder_self_attention_bias, cache=None):
+    def call(self, inputs, **kwargs):
+        # decoder_attention_bias = get_attention_bias(encoder_outputs)
+        decoder_inputs = inputs
+        attention_bias = self.params["attention_bias"]
+        encoder_outputs = kwargs["encoder_outputs"]
+        decoder_self_attention_bias = kwargs["decoder_self_attention_bias"]
+        cache = None
+
+        print("DecodeStack->call:decoder_inputs")
+        print(decoder_inputs)
+
+        print("DecodeStack->call:encoder_outputs")
+        print(encoder_outputs)
+
+        print("DecodeStack->call:attention_bias")
+        # print(attention_bias)
+
+        for n, layer in enumerate(self.layers):
+            self_attention_layer = layer[0]
+            enc_dec_attention_layer = layer[1]
+            feed_forward_network = layer[2]
+
+            # Run inputs through the sublayers.
+            layer_name = "layer_%d" % n
+            layer_cache = cache[layer_name] if cache is not None else None
+            with tf.variable_scope(layer_name):
+                with tf.variable_scope("self_attention"):
+                    decoder_inputs = self_attention_layer(
+                        decoder_inputs, bias=decoder_self_attention_bias, cache=layer_cache)
+                with tf.variable_scope("encdec_attention"):
+                    decoder_inputs = enc_dec_attention_layer(
+                        decoder_inputs, y=encoder_outputs, bias=attention_bias)
+                with tf.variable_scope("ffn"):
+                    decoder_inputs = feed_forward_network(decoder_inputs)
+
+        return self.output_normalization(decoder_inputs)
 
 
 class EncodeStack(tf.keras.layers.Layer):
@@ -72,9 +161,10 @@ class EncodeStack(tf.keras.layers.Layer):
     def call(self, inputs):
         print("EncodeStack->call:inputs")
         print(inputs)
-        attention_bias = get_attention_bias(inputs)
+        # attention_bias = get_attention_bias(inputs)
+        attention_bias = self.params["attention_bias"]
         print("EncodeStack->call:attention_bias")
-        print(attention_bias)
+        # print(attention_bias)
         # inputs_padding = None
 
         for n, layer in enumerate(self.layers):
@@ -270,11 +360,33 @@ def get_attention_bias(inputs):
     time_step = inputs.shape[1]
 
     attention_bias = tf.get_variable("attention_bias",
-                           shape=[batch_size, time_step],
-                           initializer=tf.initializers.constant(value=0))
+                                     shape=[batch_size, time_step],
+                                     initializer=tf.initializers.constant(value=0))
     attention_bias = tf.expand_dims(
         tf.expand_dims(attention_bias, axis=1), axis=1)
     return attention_bias
+
+
+def get_decoder_self_attention_bias(length):
+    """Calculate bias for decoder that maintains model's autoregressive property.
+
+    Creates a tensor that masks out locations that correspond to illegal
+    connections, so prediction at position i cannot draw information from future
+    positions.
+
+    Args:
+      length: int length of sequences in batch.
+
+    Returns:
+      float tensor of shape [1, 1, length, length]
+    """
+
+    _NEG_INF = -1e9
+    with tf.name_scope("decoder_self_attention_bias"):
+        valid_locs = tf.matrix_band_part(tf.ones([length, length]), -1, 0)
+        valid_locs = tf.reshape(valid_locs, [1, 1, length, length])
+        decoder_bias = _NEG_INF * (1.0 - valid_locs)
+    return decoder_bias
 
 
 if __name__ == "__main__":
@@ -330,16 +442,16 @@ if __name__ == "__main__":
     # print("*********************************")
     # print(embeddings)
     # print(tf.expand_dims(mask, -1))
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    a = tf.get_variable("a", shape=[8, 4], initializer=tf.random_normal_initializer(0., 4 ** -0.5))
-    # b = tf.get_variable("b", shape=[6, 5], dtype=tf.int64)
-    b = [[1, 0, 0, 0, 0],
-         [0, 1, 0, 0, 0],
-         [0, 0, 1, 0, 0],
-         [0, 0, 0, 1, 0],
-         [0, 0, 0, 0, 1],
-         [1, 0, 1, 0, 1]]
-    print(a)
-    print(b)
-    print(tf.gather(a, b))
-    print(get_padding_bias(b))
+    # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # a = tf.get_variable("a", shape=[8, 4], initializer=tf.random_normal_initializer(0., 4 ** -0.5))
+    # # b = tf.get_variable("b", shape=[6, 5], dtype=tf.int64)
+    # b = [[1, 0, 0, 0, 0],
+    #      [0, 1, 0, 0, 0],
+    #      [0, 0, 1, 0, 0],
+    #      [0, 0, 0, 1, 0],
+    #      [0, 0, 0, 0, 1],
+    #      [1, 0, 1, 0, 1]]
+    # print(a)
+    # print(b)
+    # print(tf.gather(a, b))
+    # print(get_padding_bias(b))

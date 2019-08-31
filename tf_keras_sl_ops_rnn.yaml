@@ -13,8 +13,8 @@ run:
   for: train # values: train, evaluate, predict
   use: keras # values: keras, estimator
   train:
-    epochs: 10000
-    steps_per_epoch: 50
+    epochs: 500
+    steps_per_epoch: 5000
   eval:
     epochs: 1000
 
