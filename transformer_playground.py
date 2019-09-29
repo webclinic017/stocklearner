@@ -12,8 +12,9 @@ class TBuilder:
     def __init__(self, params):
         self.params = params
         # input shape -> [time_step, feature_length]
-        self.encode_inputs = tf.keras.layers.Input(shape=[10, 8], batch_size=32, name="encode_inputs")
-        self.decode_inputs = tf.keras.layers.Input(shape=[10, 21], batch_size=32, name="decode_inputs")
+        self.encode_inputs = tf.keras.layers.Input(shape=[params["time_steps"], 8], batch_size=params["batch_size"], name="encode_inputs")
+        self.decode_inputs = tf.keras.layers.Input(shape=[params["time_steps"], 8], batch_size=params["batch_size"], name="decode_inputs")
+        # self.decode_inputs = tf.keras.layers.Input(batch_shape=(params["batch_size"], 8), name="decode_inputs")
 
         self.params["attention_bias"] = get_attention_bias(self.encode_inputs)
 
@@ -26,11 +27,12 @@ class TBuilder:
         self.encode_stack = EncodeStack(params)
         self.decode_stack = DecodeStack(params)
 
-        self.encode_output = self.encode(self.encode_inputs)
+        self.encode_outputs = self.encode(self.encode_inputs)
         print("TBuilder->__init__:self.encode passed")
+        print("#############################################")
         print("TBuilder->__init__:self.encode_output")
-        print(self.encode_output)
-        self.decode_output = self.decode(self.decode_inputs, self.encode_output)
+        print(self.encode_outputs)
+        self.decode_output = self.decode(self.decode_inputs, self.encode_outputs)
         print("TBuilder->__init__:self.decode passed")
         self.model = tf.keras.Model(inputs=[self.encode_inputs, self.decode_inputs], outputs=self.decode_output)
 
@@ -115,6 +117,9 @@ class DecodeStack(tf.keras.layers.Layer):
 
         print("DecodeStack->call:attention_bias")
         # print(attention_bias)
+
+        print("DecodeStack->call:decoder_self_attention_bias")
+        print(decoder_self_attention_bias)
 
         for n, layer in enumerate(self.layers):
             self_attention_layer = layer[0]
@@ -390,68 +395,50 @@ def get_decoder_self_attention_bias(length):
 
 
 if __name__ == "__main__":
+    tf.enable_eager_execution()
+
     # [time_steps, feature_length]
     p = dict()
-    p["batch_size"] = 64
+    p["log_dir"] = "./logs"
+    p["model_dir"] = "./output/"
+    p["batch_size"] = 128
     p["time_steps"] = 5
     p["input_length"] = 10
     p["vocab_size"] = 33708
-    p["num_hidden_layers"] = 6
-    p["num_heads"] = 8
-    p["hidden_size"] = 512
-    p["attention_dropout"] = 0.1
-    p["relu_dropout"] = 0.1
+    p["num_hidden_layers"] = 5
+    p["num_heads"] = 128
+    p["hidden_size"] = 1024
+    p["attention_dropout"] = 0.5
+    p["relu_dropout"] = 0.5
     p["filter_size"] = 2048
     p["allow_ffn_pad"] = True
-    p["layer_postprocess_dropout"] = 0.1
+    p["layer_postprocess_dropout"] = 0.5
     p["train"] = True
     p["initializer_gain"] = 1.0
 
     b = TBuilder(p)
-    m = b.get_model()
+    keras_model = b.get_model()
 
-    # inputs = tf.keras.layers.Input(shape=(784,))
-    #
-    # print(type(inputs))
-    # x = tf.keras.layers.Dense(64, activation='relu')(inputs)
-    # print(type(x))
-    # x = tf.keras.layers.Dense(64, activation='relu')(x)
-    # print(type(x))
-    # predictions = tf.keras.layers.Dense(10, activation='softmax')(x)
-    # print(type(x))
+    # from keras.callbacks import SavedModelCallback
+    from feed.data_schema import CSVDataSchema
 
-    tf.enable_eager_execution()
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=p["log_dir"], batch_size=p["batch_size"])
+    csv_callback = tf.keras.callbacks.CSVLogger(filename="./logs/training.log")
+    # savedmodel_callback = SavedModelCallback(p["model_dir"])
 
-    # x = tf.keras.layers.Input(shape=[p["input_length"]], batch_size=p["batch_size"], dtype=tf.int64)
-    # print(x)
-    # shared_weights = tf.get_variable(
-    #     "weights", [p["vocab_size"], p["hidden_size"]],
-    #     initializer=tf.random_normal_initializer(
-    #         0., p["hidden_size"] ** -0.5))
-    # print(shared_weights)
-    # mask = tf.to_float(tf.not_equal(x, 0))
-    # print(mask)
-    # embeddings = tf.gather(shared_weights, x)  # [self.vocab_size, self.hidden_size],
-    # print("*********************************")
-    # print(embeddings)
-    # embeddings *= tf.expand_dims(mask, -1)
-    # print("*********************************")
-    # print(embeddings)
-    # # Scale embedding by the sqrt of the hidden size
-    # embeddings *= p["hidden_size"] ** 0.5
-    # print("*********************************")
-    # print(embeddings)
-    # print(tf.expand_dims(mask, -1))
-    # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    # a = tf.get_variable("a", shape=[8, 4], initializer=tf.random_normal_initializer(0., 4 ** -0.5))
-    # # b = tf.get_variable("b", shape=[6, 5], dtype=tf.int64)
-    # b = [[1, 0, 0, 0, 0],
-    #      [0, 1, 0, 0, 0],
-    #      [0, 0, 1, 0, 0],
-    #      [0, 0, 0, 1, 0],
-    #      [0, 0, 0, 0, 1],
-    #      [1, 0, 1, 0, 1]]
-    # print(a)
-    # print(b)
-    # print(tf.gather(a, b))
-    # print(get_padding_bias(b))
+    schema = CSVDataSchema("./config_file/yaml_config/basic_data_schema.yaml")
+    # input_fn = schema.get_input_fn()
+
+    train_dataset = schema.tf_estimate_transformer_input_fn("/home/a1exff/Output/Train",
+                                                            keras_model.input_names,
+                                                            p["time_steps"],
+                                                            p["batch_size"],
+                                                            one_hot=True)
+
+    train_dataset = train_dataset.repeat(50000)
+
+    # keras training
+    keras_model.fit(train_dataset,
+                    steps_per_epoch=5000,
+                    epochs=500,
+                    callbacks=[tensorboard_callback, csv_callback])
