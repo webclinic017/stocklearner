@@ -1,0 +1,38 @@
+dqn:
+  action_size: 3
+  learning_frequency: 100
+  batch_size: 32
+  target_q_update_frequency: 50
+  discount: 0.99
+  train_frequency: 4
+  learn_start: 32
+  double_q: true
+  dueling: false
+  epsilon: 0.9
+  replay_buffer:
+    buffer_size: 5000
+    prioritized_replay: true
+    alpha: 0.6
+    beta: 0.4
+    incremental: 0.0001
+    eps: 0.000001
+model:
+  config_path: ./config_file/yaml_config/stock_mlp_baseline.yaml
+  output_dir: ./output/
+  max_to_save: 10
+  save_frequency: 1000
+  enable_tensorboard: false
+  log_dir: ./logs
+dataset:
+  data_path: /home/a1exff/Experiment/sse50
+  schema_path: ./config_file/yaml_config/basic_data_schema.yaml
+run:
+  for: train
+  use: keras # Support Keras only, add estimator in future
+  episode: 5000
+  train:
+    learning_rate: 0.0025
+    learning_rate_step: 100
+    learning_rate_decay_step: 50000
+    learning_rate_decay: 0.96
+    min_learning_rate: 0.00001

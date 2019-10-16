@@ -2,11 +2,27 @@
   <dictionary name="a1exff">
     <words>
       <w>dataset</w>
+      <w>feedforward</w>
       <w>filenames</w>
+      <w>foward</w>
       <w>hsplited</w>
+      <w>hyperparameter</w>
       <w>keras</w>
+      <w>logits</w>
       <w>mnist</w>
+      <w>multiheaded</w>
       <w>narray</w>
+      <w>nonpad</w>
+      <w>postprocess</w>
+      <w>preprocess</w>
+      <w>preprocessing</w>
+      <w>relu</w>
+      <w>savedmodel</w>
+      <w>softmax</w>
+      <w>sublayers</w>
+      <w>subtoken</w>
+      <w>subtokenizer</w>
+      <w>tensorboard</w>
       <w>tensorflow</w>
     </words>
   </dictionary>

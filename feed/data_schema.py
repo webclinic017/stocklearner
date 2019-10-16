@@ -27,6 +27,47 @@ class CSVDataSchema:
 
         raise NotImplementedError
 
+    def tf_estimate_transformer_input_fn(self, csv_path, input_name, time_steps, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
+        def _parse_line(line):
+            fields = tf.decode_csv(line, self.field_defaults)
+            labels = fields[-1:]
+            fields = fields[1:-1]
+            features = tf.reshape(fields, [batch_size, time_steps, -1])
+
+            if one_hot:
+                labels = tf.add(labels, 11)
+                labels = tf.divide(labels, self.divided_by)
+                labels = tf.round(labels)
+                labels = tf.cast(labels, dtype=tf.int64)
+                labels = tf.one_hot(labels, self.output_size)
+                labels = tf.reshape(labels, [-1, time_steps, self.output_size])
+                # labels = tf.slice(labels, [0, time_steps - 1, 0], [batch_size, 1, self.output_size])
+                # labels = tf.reshape(labels, [-1, self.output_size])
+            else:
+                labels = tf.reshape(labels, [batch_size, time_steps, -1])
+                # labels = tf.slice(labels, [0, time_steps - 1, 0], [batch_size, 1, 1])
+                # labels = tf.reshape(labels, [-1, 1])
+
+            features = dict(zip(input_name, [features, labels]))
+            print(features)
+            print(labels)
+            return features, labels
+
+        filenames = [join(csv_path, f) for f in os.listdir(csv_path) if f != ".DS_Store" and "_s" in f]
+        print(filenames)
+        dataset = tf.data.TextLineDataset(filenames).skip(0)
+
+        dataset = dataset.batch(batch_size * time_steps, drop_remainder=True)
+        dataset = dataset.map(_parse_line)
+
+        if buffer_size is not None:
+            dataset = dataset.shuffle(buffer_size=buffer_size)
+
+        if buffer_size is not None:
+            dataset = dataset.repeat(repeat)
+
+        return dataset
+
     def tf_estimate_input_fn(self, csv_path, input_name, time_steps, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
 
         def _parse_line_rnn(line):
@@ -124,16 +165,22 @@ class CSVDataSchema:
 
 
 if __name__ == "__main__":
-    import yaml
     tf.enable_eager_execution()
 
     data_schema_file_path = "../config_file/yaml_config/basic_data_schema.yaml"
 
     data_source = "../test_data/stock/"
     schema = CSVDataSchema(data_schema_file_path)
-    input_fn = schema.get_input_fn()
-    rnn_ds = input_fn(data_source, input_name="main_input", batch_size=3, time_steps=5)
-    iterator = rnn_ds.make_one_shot_iterator()
-    next_xs, next_ys = iterator.get_next()
-    print(next_xs)
-    print(next_ys)
+    # input_fn = schema.get_input_fn()
+    # ds = input_fn(data_source, input_name="main_input", batch_size=3, time_steps=5)
+
+    ds = schema.tf_estimate_transformer_input_fn(data_source,
+                                                 input_name=["encoder_inputs", "decoder_inputs"],
+                                                 time_steps=5,
+                                                 batch_size=1,
+                                                 one_hot=True)
+    iterator = ds.make_one_shot_iterator()
+    for i in range(5):
+        next_xs, next_ys = iterator.get_next()
+        print(next_xs)
+        print(next_ys)
