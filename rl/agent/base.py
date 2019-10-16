@@ -28,7 +28,7 @@ class RLBaseAgent:
 
 class RLCommonStrategy(bt.Strategy):
     params = (
-        ("printlog", False),
+        ("printlog", True),
     )
 
     def log(self, txt, dt=None, doprint=False):
@@ -97,7 +97,8 @@ class RLCommonStrategy(bt.Strategy):
         # Write down: no pending order
         self.order = None
 
-    def _get_reward(self, calculate_type="upl"):
+    def __get_reward(self, calculate_type="upl"):
+        # upl = unrealized profit or loss, pct = percentage of win or loss
         reward = 0.
         # self.log("Last value " + str(self.last_value) + " current value: " + str(self.current_value))
         if calculate_type == "upl":
@@ -109,8 +110,8 @@ class RLCommonStrategy(bt.Strategy):
         # self.log("Reward: " + str(reward))
         return reward
 
-    def _get_observation(self, date, offset=0, scaled_data=False):
-        def _get_data(df):
+    def __get_observation(self, date, offset=0, scaled_data=False):
+        def get_data(df):
             max_idx = df.shape[0]
             # print(max_idx)
             idx = df.index.get_loc(date)
@@ -132,9 +133,9 @@ class RLCommonStrategy(bt.Strategy):
             if self.scaled_df is None:
                 raise NotImplementedError
             else:
-                return _get_data(self.scaled_df)
+                return get_data(self.scaled_df)
         else:
-            return _get_data(self.df)
+            return get_data(self.df)
 
     # As env.render(), but need to get observation and reward
     def next(self):
@@ -150,8 +151,8 @@ class RLCommonStrategy(bt.Strategy):
         # Fetch observation, do the rest thing first which should be done in step function
         self.last_observation = self.current_observation
         self.current_value = round(self.broker.getvalue(), 2)
-        self.current_observation, self.done = self._get_observation(date=self.date, scaled_data=True)
-        self.reward = self._get_reward(calculate_type="pct")
+        self.current_observation, self.done = self.__get_observation(date=self.date, scaled_data=True)
+        self.reward = self.__get_reward(calculate_type="pct")
         self.agent.store(self.last_observation, self.action, self.reward, self.current_observation, self.done)
 
         self.action = self.agent.choose_action(self.current_observation)
@@ -175,8 +176,7 @@ class RLCommonStrategy(bt.Strategy):
 
         global_step = self.env.getglobalstep()
 
-        if global_step % self.learning_freq == 0:
-            self.agent.study(global_step)
+        self.agent.study(global_step)
 
         self.env.addglobalstep(global_step + 1)
 

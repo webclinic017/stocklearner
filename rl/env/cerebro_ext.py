@@ -30,10 +30,10 @@ class RLExtCerebro(bt.Cerebro):
 
         bt.Cerebro.run(self)
 
-    def adddf(self, data_path, columns):
+    def adddf(self, data_path, columns=BASIC_COLUMNS):
         self._df = self._load_pd(data_path, columns)
 
-    def addscaleddf(self, data_path, columns):
+    def addscaleddf(self, data_path, columns=BASIC_COLUMNS):
         self._scaled_df = self._load_pd(data_path, columns)
 
     def addglobalstep(self, step):
@@ -42,7 +42,7 @@ class RLExtCerebro(bt.Cerebro):
     def getglobalstep(self):
         return self._global_step
 
-    def _load_pd(self, data_path, columns):
+    def _load_pd(self, data_path, columns=BASIC_COLUMNS):
         df = pd.read_csv(data_path, header=None)
         df.columns = columns
         df.set_index("DATE", inplace=True)

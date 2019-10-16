@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+import math
 # from keras.model.layer.attention_layer import SelfAttention
 from keras.model.layer.ffn_layer import FeedFowardNetwork
 
@@ -12,8 +12,10 @@ class TBuilder:
     def __init__(self, params):
         self.params = params
         # input shape -> [time_step, feature_length]
-        self.encode_inputs = tf.keras.layers.Input(shape=[params["time_steps"], 8], batch_size=params["batch_size"], name="encode_inputs")
-        self.decode_inputs = tf.keras.layers.Input(shape=[params["time_steps"], 8], batch_size=params["batch_size"], name="decode_inputs")
+        self.encode_inputs = tf.keras.layers.Input(shape=[params["time_steps"], 8], batch_size=params["batch_size"],
+                                                   name="encode_inputs")
+        self.decode_inputs = tf.keras.layers.Input(shape=[params["time_steps"], 8], batch_size=params["batch_size"],
+                                                   name="decode_inputs")
         # self.decode_inputs = tf.keras.layers.Input(batch_shape=(params["batch_size"], 8), name="decode_inputs")
 
         self.params["attention_bias"] = get_attention_bias(self.encode_inputs)
@@ -45,36 +47,49 @@ class TBuilder:
         return self.model
 
     def encode(self, inputs):
-        inputs = tf.keras.layers.Dense(self.params["hidden_size"])(inputs)
-        print("TBuilder->encoder:inputs")
-        print(inputs)
-        return self.encode_stack(inputs)
+        with tf.variable_scope("encode"):
+            encoder_inputs = tf.keras.layers.Dense(self.params["hidden_size"])(inputs)
+            print("TBuilder->encoder:inputs")
+            print(encoder_inputs)
+
+            with tf.name_scope("add_pos_encoding"):
+                length = tf.shape(encoder_inputs)[1]
+                pos_encoding = PositionEncoding(length, self.params["hidden_size"])
+                encoder_inputs = pos_encoding(encoder_inputs)
+
+            encoder_inputs = tf.keras.layers.Dropout(1 - self.params["layer_postprocess_dropout"])(encoder_inputs, training=self.params["train"])
+            return self.encode_stack(encoder_inputs)
 
     def decode(self, target_inputs, encoder_outputs):
-        print("TBuilder->decoder:target_inputs")
-        print(target_inputs)
+        with tf.variable_scope("decode"):
+            print("TBuilder->decoder:target_inputs")
+            print(target_inputs)
 
-        print("TBuilder->decoder:encoder_outputs")
-        print(encoder_outputs)
+            print("TBuilder->decoder:encoder_outputs")
+            print(encoder_outputs)
 
-        inputs = tf.keras.layers.Dense(self.params["hidden_size"])(target_inputs)
+            decoder_inputs = tf.keras.layers.Dense(self.params["hidden_size"])(target_inputs)
 
-        print("TBuilder->decoder:inputs")
-        print(inputs)
+            print("TBuilder->decoder:inputs")
+            print(decoder_inputs)
 
-        # Run values
-        length = tf.shape(inputs)[1]
-        decoder_self_attention_bias = get_decoder_self_attention_bias(length)
+            with tf.name_scope("add_pos_encoding"):
+                length = tf.shape(decoder_inputs)[1]
+                pos_encoding = PositionEncoding(length, self.params["hidden_size"])
+                decoder_inputs = pos_encoding(decoder_inputs)
+                decoder_inputs = tf.keras.layers.Dropout(1 - self.params["layer_postprocess_dropout"])(decoder_inputs, training=self.params["train"])
 
-        print("TBuilder->decoder:decoder_self_attention_bias")
-        print(decoder_self_attention_bias)
-        outputs = self.decode_stack(inputs,
-                                    encoder_outputs=encoder_outputs,
-                                    decoder_self_attention_bias=decoder_self_attention_bias)
-        print("#############################################")
-        logits = tf.keras.layers.Dense(target_inputs.shape[-1], activation="softmax")(outputs)
-        return logits
-        # return outputs
+            decoder_self_attention_bias = get_decoder_self_attention_bias(length)
+            print("TBuilder->decoder:decoder_self_attention_bias")
+            print(decoder_self_attention_bias)
+
+            outputs = self.decode_stack(decoder_inputs,
+                                        encoder_outputs=encoder_outputs,
+                                        decoder_self_attention_bias=decoder_self_attention_bias)
+
+            print("#############################################")
+            logits = tf.keras.layers.Dense(target_inputs.shape[-1], activation="softmax")(outputs)
+            return logits
 
 
 class DecodeStack(tf.keras.layers.Layer):
@@ -98,9 +113,8 @@ class DecodeStack(tf.keras.layers.Layer):
             PrePostProcessingWrapper(enc_dec_attention_layer, params),
             PrePostProcessingWrapper(feed_forward_network, params)])
 
-        self.output_normalization = LayerNormalization(params["hidden_size"])
+        self.output_normalization = LayerNormalization(params["hidden_size"], scope="decode_stack")
 
-    # def call(self, decoder_inputs, encoder_outputs, decoder_self_attention_bias, cache=None):
     def call(self, inputs, **kwargs):
         # decoder_attention_bias = get_attention_bias(encoder_outputs)
         decoder_inputs = inputs
@@ -133,7 +147,7 @@ class DecodeStack(tf.keras.layers.Layer):
                 with tf.variable_scope("self_attention"):
                     decoder_inputs = self_attention_layer(
                         decoder_inputs, bias=decoder_self_attention_bias, cache=layer_cache)
-                with tf.variable_scope("encdec_attention"):
+                with tf.variable_scope("encode_attention"):
                     decoder_inputs = enc_dec_attention_layer(
                         decoder_inputs, y=encoder_outputs, bias=attention_bias)
                 with tf.variable_scope("ffn"):
@@ -161,7 +175,7 @@ class EncodeStack(tf.keras.layers.Layer):
                                 PrePostProcessingWrapper(feed_forward_network, params)])
 
         # Create final layer normalization layer.
-        self.output_normalization = LayerNormalization(params["hidden_size"])
+        self.output_normalization = LayerNormalization(params["hidden_size"], scope="encode_stack")
 
     def call(self, inputs):
         print("EncodeStack->call:inputs")
@@ -195,7 +209,7 @@ class PrePostProcessingWrapper(tf.keras.layers.Layer):
         self.train = params["train"]
 
         # Create normalization layer
-        self.layer_norm = LayerNormalization(params["hidden_size"])
+        self.layer_norm = LayerNormalization(params["hidden_size"], scope="PPPW")
 
     def call(self, x, *args, **kwargs):
         # Preprocessing: apply layer normalization
@@ -211,14 +225,15 @@ class PrePostProcessingWrapper(tf.keras.layers.Layer):
 
 
 class LayerNormalization(tf.keras.layers.Layer):
-    def __init__(self, hidden_size):
+    def __init__(self, hidden_size, scope):
         super(LayerNormalization, self).__init__()
         self.hidden_size = hidden_size
+        self.scope = scope
 
     def build(self, _):
-        self.scale = tf.get_variable("layer_norm_scale", [self.hidden_size],
+        self.scale = tf.get_variable(self.scope + "_layer_norm_scale", [self.hidden_size],
                                      initializer=tf.ones_initializer())
-        self.bias = tf.get_variable("layer_norm_bias", [self.hidden_size],
+        self.bias = tf.get_variable(self.scope + "_layer_norm_bias", [self.hidden_size],
                                     initializer=tf.zeros_initializer())
         self.built = True
 
@@ -394,6 +409,51 @@ def get_decoder_self_attention_bias(length):
     return decoder_bias
 
 
+def get_position_encoding(length, hidden_size, min_timescale=1.0, max_timescale=1.0e4):
+    """Return positional encoding.
+
+    Calculates the position encoding as a mix of sine and cosine functions with
+    geometrically increasing wavelengths.
+    Defined and formulized in Attention is All You Need, section 3.5.
+
+    Args:
+      length: Sequence length.
+      hidden_size: Size of the
+      min_timescale: Minimum scale that will be applied at each position
+      max_timescale: Maximum scale that will be applied at each position
+
+    Returns:
+      Tensor with shape [length, hidden_size]
+    """
+    position = tf.to_float(tf.range(length))
+    num_timescales = hidden_size // 2
+    log_timescale_increment = (
+            math.log(float(max_timescale) / float(min_timescale)) /
+            (tf.to_float(num_timescales) - 1))
+    inv_timescales = min_timescale * tf.exp(
+        tf.to_float(tf.range(num_timescales)) * -log_timescale_increment)
+    scaled_time = tf.expand_dims(position, 1) * tf.expand_dims(inv_timescales, 0)
+    signal = tf.concat([tf.sin(scaled_time), tf.cos(scaled_time)], axis=1)
+    return signal
+
+
+class PositionEncoding(tf.keras.layers.Layer):
+    def __init__(self, length, hidden_size, min_timescale=1.0, max_timescale=1.0e4):
+        super(PositionEncoding, self).__init__()
+        position = tf.to_float(tf.range(length))
+        num_timescales = hidden_size // 2
+        log_timescale_increment = (
+                math.log(float(max_timescale) / float(min_timescale)) /
+                (tf.to_float(num_timescales) - 1))
+        inv_timescales = min_timescale * tf.exp(
+            tf.to_float(tf.range(num_timescales)) * -log_timescale_increment)
+        scaled_time = tf.expand_dims(position, 1) * tf.expand_dims(inv_timescales, 0)
+        self.signal = tf.concat([tf.sin(scaled_time), tf.cos(scaled_time)], axis=1)
+
+    def call(self, inputs, **kwargs):
+        return inputs + self.signal
+
+
 if __name__ == "__main__":
     tf.enable_eager_execution()
 
@@ -402,11 +462,11 @@ if __name__ == "__main__":
     p["log_dir"] = "./logs"
     p["model_dir"] = "./output/"
     p["batch_size"] = 128
-    p["time_steps"] = 5
+    p["time_steps"] = 10
     p["input_length"] = 10
     p["vocab_size"] = 33708
-    p["num_hidden_layers"] = 5
-    p["num_heads"] = 128
+    p["num_hidden_layers"] = 10
+    p["num_heads"] = 32
     p["hidden_size"] = 1024
     p["attention_dropout"] = 0.5
     p["relu_dropout"] = 0.5
@@ -435,10 +495,17 @@ if __name__ == "__main__":
                                                             p["batch_size"],
                                                             one_hot=True)
 
+    test_dataset = schema.tf_estimate_transformer_input_fn("/home/a1exff/Output/Test",
+                                                           keras_model.input_names,
+                                                           p["time_steps"],
+                                                           p["batch_size"],
+                                                           one_hot=True)
+
     train_dataset = train_dataset.repeat(50000)
 
     # keras training
     keras_model.fit(train_dataset,
-                    steps_per_epoch=5000,
-                    epochs=500,
+                    steps_per_epoch=1000,
+                    epochs=5,
                     callbacks=[tensorboard_callback, csv_callback])
+    print(keras_model.evaluate(test_dataset, batch_size=p["batch_size"], steps=10, workers=2))

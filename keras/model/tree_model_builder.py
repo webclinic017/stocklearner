@@ -10,7 +10,7 @@ class TreeModelBuilder:
         if debug:
             print(msg)
 
-    def __init__(self, yaml_config_file):
+    def __init__(self, yaml_config_file, model_name="default"):
         yaml_file = open(yaml_config_file, 'r', encoding='utf-8')
         self.yaml_config = yaml.load(yaml_file.read())
 
@@ -20,11 +20,12 @@ class TreeModelBuilder:
         self.inputs = []
         self.outputs = []
 
-        self._build_layers()
-        self._build_tree()
-        self._build_ffn()
-        self._build_model()
-        self._compile()
+        with tf.variable_scope(model_name):
+            self._build_layers()
+            self._build_tree()
+            self._build_ffn()
+            self._build_model()
+            self._compile()
 
     def _build_layers(self):
         layers_config = self.yaml_config["config"]["layers"]
