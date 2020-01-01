@@ -3,7 +3,7 @@ import operator
 
 class SegmentTree(object):
     def __init__(self, capacity, operation, neutral_element):
-        """Build a Segment Tree data structure.
+        """Build a Segment Tree schema structure.
 
         https://en.wikipedia.org/wiki/Segment_tree
 

@@ -59,7 +59,7 @@
 #     result = int_to_char[index]
 #     seq_in = [int_to_char[value] for value in pattern]
 
-# Generate dummy data
+# Generate dummy schema
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Dropout
@@ -80,7 +80,7 @@ print(y_predict)
 
 model = Sequential()
 # Dense(64) is a fully-connected layer with 64 hidden units.
-# in the first layer, you must specify the expected input data shape:
+# in the first layer, you must specify the expected input schema shape:
 # here, 20-dimensional vectors.
 model.add(Dense(64, activation='relu', input_dim=20))
 model.add(Dropout(0.5))

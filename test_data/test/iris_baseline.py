@@ -30,7 +30,7 @@ parser.add_argument('--train_steps', default=1000, type=int,
 def main(argv):
     args = parser.parse_args(argv[1:])
 
-    # Fetch the data
+    # Fetch the schema
     (train_x, train_y), (test_x, test_y) = iris.load_data()
 
     # Feature columns describe how to use the input.

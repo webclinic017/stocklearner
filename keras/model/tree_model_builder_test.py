@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 from keras.model.tree_model_builder import TreeModelBuilder
 
 if __name__ == "__main__":
@@ -10,16 +11,16 @@ if __name__ == "__main__":
     # mnist_x, mnist_y = train
     #
     # def get_train_inputs(batch_size, mnist_data):
-    #     """Return the input function to get the training data.
+    #     """Return the input function to get the training schema.
     #     Args:
     #         batch_size (int): Batch size of training iterator that is returned
     #                           by the input function.
-    #         mnist_data ((array, array): Mnist training data as (inputs, labels).
+    #         mnist_data ((array, array): Mnist training schema as (inputs, labels).
     #     Returns:
     #         DataSet: A tensorflow DataSet object to represent the training input
     #                  pipeline.
     #     """
-    #     dataset = tf.data.Dataset.from_tensor_slices(mnist_data)
+    #     dataset = tf.schema.Dataset.from_tensor_slices(mnist_data)
     #     dataset = dataset.shuffle(
     #         buffer_size=1000, reshuffle_each_iteration=True
     #     ).repeat(count=None).batch(batch_size)
@@ -29,7 +30,7 @@ if __name__ == "__main__":
     num_classes = 10
     epochs = 20
 
-    # the data, split between train and test sets
+    # the schema, split between train and test sets
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
     x_train = x_train.reshape(60000, 784)

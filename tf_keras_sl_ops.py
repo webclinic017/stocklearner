@@ -7,7 +7,7 @@ from feed import csv_data as stock_data
 from feed.data_schema import CSVDataSchema
 from keras.model.tree_model_builder import TreeModelBuilder
 
-APP_CONFIG_FILE_PATH = "./tf_keras_sl_ops_rnn.yaml"
+APP_CONFIG_FILE_PATH = "./config_file/train/tf_keras_sl_ops_rnn.yaml"
 
 # enable below when use keras and comment it when user estimator
 # tf.enable_eager_execution()
@@ -40,7 +40,7 @@ def train():
     keras_model = builder.get_model()
 
     if train_use == "keras":
-        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, batch_size=batch_size)
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
         # savedmodel_callback = SavedModelCallback(model_dir)
         savedmodel_callback = tf.keras.callbacks.ModelCheckpoint(model_dir)
 

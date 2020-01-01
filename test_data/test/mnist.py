@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-"""tf.data.Dataset interface to the MNIST dataset."""
+"""tf.schema.Dataset interface to the MNIST dataset."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -112,13 +112,13 @@ def dataset(directory, images_file, labels_file):
 
 
 def train(directory):
-    """tf.data.Dataset object for MNIST training data."""
+    """tf.schema.Dataset object for MNIST training schema."""
     return dataset(directory, 'train-images-idx3-ubyte',
                    'train-labels-idx1-ubyte')
 
 
 def test(directory):
-    """tf.data.Dataset object for MNIST test data."""
+    """tf.schema.Dataset object for MNIST test schema."""
     return dataset(directory, 't10k-images-idx3-ubyte', 't10k-labels-idx1-ubyte')
 
 
