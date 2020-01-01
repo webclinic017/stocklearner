@@ -1,8 +1,8 @@
-import tensorflow as tf
 import numpy as np
-from tensorflow.python.platform import tf_logging as logging
+import tensorflow as tf
 
 
+@DeprecationWarning
 class SavedModelCallback(tf.keras.callbacks.Callback):
     def __init__(self,
                  filepath,
@@ -20,8 +20,7 @@ class SavedModelCallback(tf.keras.callbacks.Callback):
         self.epochs_since_last_save = 0
 
         if mode not in ['auto', 'min', 'max']:
-            logging.warning('ModelCheckpoint mode %s is unknown, '
-                            'fallback to auto mode.', mode)
+            print('ModelCheckpoint mode %s is unknown, fallback to auto mode.', mode)
             mode = 'auto'
 
         if mode == 'min':
@@ -47,8 +46,7 @@ class SavedModelCallback(tf.keras.callbacks.Callback):
             if self.save_best_only:
                 current = logs.get(self.monitor)
                 if current is None:
-                    logging.warning('Can save best model only with %s available, '
-                                    'skipping.', self.monitor)
+                    print('Can save best model only with %s available, skipping.', self.monitor)
                 else:
                     if self.monitor_op(current, self.best):
                         if self.verbose > 0:
@@ -56,11 +54,8 @@ class SavedModelCallback(tf.keras.callbacks.Callback):
                                   ' saving model to %s' % (epoch + 1, self.monitor, self.best,
                                                            current, filepath))
                         self.best = current
-
-                        if tf.__version__ == "1.13.1":
-                            tf.contrib.saved_model.save_keras_model(self.model, filepath)
-                        else:
-                            tf.keras.experimental.export(self.model, filepath)
+                        # tf.keras.experimental.export_saved_model(self.model, filepath)
+                        tf.keras.models.save_model(self.model, filepath)
                     else:
                         if self.verbose > 0:
                             print('\nEpoch %05d: %s did not improve from %0.5f' %
@@ -68,7 +63,5 @@ class SavedModelCallback(tf.keras.callbacks.Callback):
             else:
                 if self.verbose > 0:
                     print('\nEpoch %05d: saving model to %s' % (epoch + 1, filepath))
-                if tf.__version__ == "1.13.1":
-                    tf.contrib.saved_model.save_keras_model(self.model, filepath)
-                else:
-                    tf.keras.experimental.export(self.model, filepath)
+                # tf.keras.experimental.export_saved_model(self.model, filepath)
+                tf.keras.models.save_model(self.model, filepath)

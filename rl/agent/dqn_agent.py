@@ -1,12 +1,15 @@
+import configparser
+import os
+import random
+
+import numpy as np
+import tensorflow as tf
+
 from rl.agent.base import RLBaseAgent
 from rl.dqn.replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
 from rl.ops import clipped_error
 from util import model_util
-import tensorflow as tf
-import numpy as np
-import configparser
-import os
-import random
+
 
 # TODO: 1. configure parameters - DONE
 #       2. Double Q - DONE

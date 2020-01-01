@@ -1,8 +1,10 @@
-import tensorflow as tf
 import configparser
 import datetime
-from util import fn_util
+
+import tensorflow as tf
+
 from util import dl_util
+from util import fn_util
 from util import log_util
 
 

@@ -1,5 +1,7 @@
-import tensorflow as tf
 import configparser
+
+import tensorflow as tf
+
 from util import log_util
 
 

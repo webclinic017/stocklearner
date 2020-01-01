@@ -1,5 +1,4 @@
 import hashlib
-from model.mlp import *
 
 
 def md5(filename):

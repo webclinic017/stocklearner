@@ -23,8 +23,8 @@ import shutil
 import tempfile
 
 import numpy as np
-from six.moves import urllib
 import tensorflow as tf
+from six.moves import urllib
 
 MNIST_LOCAL_DIR = "/Users/alex/Desktop/stocklearner/test_data/mnist"
 

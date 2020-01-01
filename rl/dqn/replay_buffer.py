@@ -1,6 +1,8 @@
 # Codes from openai.baselines.deepq.replay_buffer
-import numpy as np
 import random
+
+import numpy as np
+
 from rl.common.segment_tree import SumSegmentTree, MinSegmentTree
 
 

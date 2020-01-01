@@ -1,11 +1,12 @@
-from rl.agent.base import RLBaseAgent
-from rl.dqn.replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
-from keras.model.tree_model_builder import TreeModelBuilder
-from rl.ops import clipped_error
-import tensorflow as tf
-import numpy as np
 import os
 import random
+
+import numpy as np
+import tensorflow as tf
+
+from keras.model.tree_model_builder import TreeModelBuilder
+from rl.agent.base import RLBaseAgent
+from rl.dqn.replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
 
 
 class DQNAgent(RLBaseAgent):
@@ -14,7 +15,7 @@ class DQNAgent(RLBaseAgent):
 
         self.yaml_config = yaml_config
 
-        self.__init_params()
+        self._init_params()
 
         self.network_yaml_config_file = "../../config_file/yaml_config/stock_mlp_baseline.yaml"
 
@@ -33,14 +34,14 @@ class DQNAgent(RLBaseAgent):
 
         # self.saver = tf.train.Saver(max_to_keep=self.max_to_save)
 
-        self.__build_dqn()
+        self._build_dqn()
 
         if self.enable_tensorboard:
             self.tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=self.log_dir, batch_size=self.batch_size)
         else:
             self.tensorboard_callback = None
 
-    def __init_params(self):
+    def _init_params(self):
         self.learning_freq = self.yaml_config["dqn"]["learning_frequency"]
         self.batch_size = self.yaml_config["dqn"]["batch_size"]
         self.target_q_update_step = self.yaml_config["dqn"]["target_q_update_frequency"]
@@ -81,7 +82,7 @@ class DQNAgent(RLBaseAgent):
 
         self.model_file = os.path.join(self.output_dir, "DQN_Agent.h5")
 
-    def __build_dqn(self):
+    def _build_dqn(self):
         self.q_network = TreeModelBuilder(self.network_yaml_config_file, "q_network").get_model()
         self.target_q_network = TreeModelBuilder(self.network_yaml_config_file, "target_q_network").get_model()
 
@@ -104,15 +105,15 @@ class DQNAgent(RLBaseAgent):
     def study(self, global_step):
         if global_step > self.learn_start:
             if global_step % self.train_frequency == 0:
-                self.__q_learning_mini_batch(global_step)
+                self._q_learning_mini_batch(global_step)
 
             if global_step % self.target_q_update_step == 0:
-                self.__update_target_q_network()
+                self._update_target_q_network()
 
             if global_step % self.save_frequency == 0:
-                self.__save_model()
+                self._save_model()
 
-    def __q_learning_mini_batch(self, step):
+    def _q_learning_mini_batch(self, step):
         # TODO: wip
         if len(self.replay_buffer) < self.batch_size:
             return
@@ -153,14 +154,14 @@ class DQNAgent(RLBaseAgent):
             new_priorities = np.abs(td_errors) + self.prioritized_replay_eps
             self.replay_buffer.update_priorities(batch_idxes, new_priorities)
 
-    def __load_model(self):
+    def _load_model(self):
         self.target_q_network = tf.keras.models.load_model(filepath=self.model_file)
         self.__update_target_q_network()
 
-    def __save_model(self):
+    def _save_model(self):
         tf.keras.models.save_model(self.q_network, filepath=self.model_file)
 
-    def __update_target_q_network(self):
+    def _update_target_q_network(self):
         self.q_network.set_weights(self.target_q_network.get_weights())
 
 

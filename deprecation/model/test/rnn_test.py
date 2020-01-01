@@ -1,4 +1,4 @@
-from model.rnn import *
+from deprecation.model.rnn import *
 
 if __name__ == "__main__":
     my_config_file = "../config_file/stock_rnn_baseline.cls"

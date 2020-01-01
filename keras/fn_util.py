@@ -27,6 +27,3 @@ if __name__ == "__main__":
     dyn_layer = get_keras_layer(my_config)
     print(type(dyn_layer))
     print(dyn_layer.name)
-
-
-

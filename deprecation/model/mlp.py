@@ -1,4 +1,3 @@
-from model.base_network import *
 from util import fn_util
 
 '''

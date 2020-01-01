@@ -1,13 +1,14 @@
-from os.path import join
-from os import listdir
-import yaml
 import random
+from os import listdir
+from os.path import join
+
+import yaml
+
 from feed.bt_data import BTCSVBasicData
 from rl.agent.base import *
 from rl.agent.tf_keras_dqn_agent import DQNAgent
 from rl.env.cerebro_ext import RLExtCerebro
 from rl.env.sizer_ext import PercentSizer
-
 
 APP_CONFIG_FILE_PATH = "./tf_keras_rl_ops.yaml"
 

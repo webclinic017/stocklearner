@@ -1,5 +1,3 @@
-from model.auto_encoder import *
-
 if __name__ == "__main__":
     from feed.csv_data import csv_input_fn
     config_file_path = "../config_file/mnist_auto_encoder_baseline.cls"

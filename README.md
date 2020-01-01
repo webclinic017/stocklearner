@@ -1,25 +1,13 @@
 # StockLearner
 
-## Description
-
-Deep learning for China A share stock data
-
 ## Purpose
 
-User machine learning to perdict stock price
+1) Use machine learning to predict stock price for China stocks
+2) Use reinforcement learning to see how program can play for China stocks
 
 ## Requirements
 
-Supervised learning:
-
-- tensorflow >= `1.8.0`
-- pandas >= `0.23.2`
-- numpy >= `0.23.2`
-
-Reinforcement learning:
-
-- all in supervised learning
-- backtrader >= `1.9.59.122`
+Refer to requirement.txt
 
 ### Install requirements
 
@@ -27,40 +15,22 @@ Reinforcement learning:
 pip install -r requirements.txt
 ```
 
+## Configuration file path
+
+1. ./config_file/yaml_config contains model configs and data schema configs
+2. tf_keras_sl_ops_***.yaml in root folder contains dataset path, configuration file path
+3. specify the yaml in tf_keras_sl_ops.py 
+
 ## Run
 
-1. Modify `app.config` to set the training data path, eval data path and model config path
-2. Create or modify your own model config ini file and put it into the model config path
-3. Run `sl_ops.py` for supervised learning and run `rl_ops.py` for reinforcement learning
+1. run tf_keras_sl_ops.py to run supervised learning
+2. run tf_keras_rl_ops.py to run reinforcement learning 
 
 ## Models
 
-So far MLP and RNN(LSTM) only
+Follow keras yaml structure under ./config_file/yaml_config to build model
 
 ### Data
 
-Please use CSV file with columns as below:
-
-`"DATE", "OPEN", "HIGH", "CLOSE", "LOW", "VOLUME", "PRICE_CHANGE", "P_CHANGE", "TURNOVER", "LABEL"`
-
-- Date will be removed during training
-- Or modify `/feed/csv_data.py` to support the new columns
-
-### Known issue
-
-- Multiprocessing has issues, so only place one model config file and train one time. This will be fixed in future
-
-### TODO
-
-1. Will add batch normalization in MLP soon
-2. Create new config folder for config classes，rename current config folder to config_file and only store for .ini files
-3. Extract train and predict ops from model classes, create new train_ops for them
-4. Refactor for DQN
-   1. Create config class for DQN
-   2. Add double Q learning
-   3. Add Duel DQN
-   4. Add Prioritized Replay Buffer
-   5. Add Tenorboard summary
-   6. Add learning rate ops
-5. Create A3C for deep reinforcement learning
-6. Use eager execution to support TensorFlow2.0 in future
+- basic_data_schema.yaml and tech_data_schema.yaml contain the structure for datasets
+- ./test_data contains some sample dataset 

@@ -1,5 +1,4 @@
-from model.mlp import *
-from model.rnn import *
+from deprecation.model.rnn import *
 
 logger = log_util.get_file_logger("model_util.py", "sl_ops.log")
 

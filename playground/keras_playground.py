@@ -59,13 +59,13 @@
 #     result = int_to_char[index]
 #     seq_in = [int_to_char[value] for value in pattern]
 
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Activation
-from tensorflow.keras.optimizers import SGD
-
 # Generate dummy data
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import SGD
+
 x_train = np.random.random((10000, 20))
 y_train = tf.keras.utils.to_categorical(np.random.randint(10, size=(10000, 1)), num_classes=10)
 

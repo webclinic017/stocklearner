@@ -1,6 +1,5 @@
-from model.base_network import *
-from util import fn_util
 from util import dl_util
+from util import fn_util
 
 MNIST_BOUNDARIES = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 

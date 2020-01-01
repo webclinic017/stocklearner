@@ -1,6 +1,7 @@
 import os
-import tensorflow as tf
 from os.path import join
+
+import tensorflow as tf
 
 #           0       1       2       3        4      5         6               7           8           9
 BASIC_COLUMNS = ["DATE", "OPEN", "HIGH", "CLOSE", "LOW", "VOLUME", "PRICE_CHANGE", "P_CHANGE", "TURNOVER", "LABEL"]
@@ -13,7 +14,7 @@ DIVIDE_BY = 3
 
 def csv_input_fn_estimate_rnn(csv_path, input_name, time_steps, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
     def _parse_line(line):
-        fields = tf.decode_csv(line, BASIC_FIELD_DEFAULTS)
+        fields = tf.io.decode_csv(records=line, record_defaults=BASIC_FIELD_DEFAULTS)
         labels = fields[-1:]
         fields = fields[1:-1]
         fields = tf.reshape(fields, [batch_size, time_steps, -1])
@@ -51,7 +52,7 @@ def csv_input_fn_estimate_rnn(csv_path, input_name, time_steps, batch_size=None,
 
 def csv_input_fn_estimate(csv_path, input_name, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
     def _parse_line(line):
-        fields = tf.decode_csv(line, BASIC_FIELD_DEFAULTS)
+        fields = tf.io.decode_csv(records=line, record_defaults=BASIC_FIELD_DEFAULTS)
         labels = fields[-1:]
         fields = fields[1:-1]
         features = dict(zip(input_name, [fields]))
@@ -84,7 +85,7 @@ def csv_input_fn_estimate(csv_path, input_name, batch_size=None, buffer_size=Non
 
 def csv_input_fn(csv_path, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
     def _parse_line(line):
-        fields = tf.decode_csv(line, BASIC_FIELD_DEFAULTS)
+        fields = tf.io.decode_csv(records=line, record_defaults=BASIC_FIELD_DEFAULTS)
         features = dict(zip(BASIC_COLUMNS, fields))
         features.pop("DATE")
         label = features.pop("LABEL")
@@ -118,7 +119,7 @@ def csv_input_fn(csv_path, batch_size=None, buffer_size=None, repeat=None, one_h
 
 
 if __name__ == "__main__":
-    tf.enable_eager_execution()
+    tf.compat.v1.enable_eager_execution()
 
     data_source = "../test_data/stock/"
     ds = csv_input_fn(data_source, batch_size=32, repeat=-1, one_hot=True)
@@ -126,7 +127,7 @@ if __name__ == "__main__":
 
     # ds = ds.batch(20)
     # ds = ds.repeat(-1)
-    iterator = rnn_ds.make_one_shot_iterator()
+    iterator = tf.compat.v1.data.make_one_shot_iterator(rnn_ds)
     next_xs, next_ys = iterator.get_next()
     print(next_xs)
     print(next_ys)

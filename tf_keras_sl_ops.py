@@ -1,11 +1,11 @@
-import yaml
 import os
+
 import tensorflow as tf
+import yaml
+
 from feed import csv_data as stock_data
 from feed.data_schema import CSVDataSchema
 from keras.model.tree_model_builder import TreeModelBuilder
-from keras.callbacks import SavedModelCallback
-
 
 APP_CONFIG_FILE_PATH = "./tf_keras_sl_ops_rnn.yaml"
 
@@ -41,7 +41,8 @@ def train():
 
     if train_use == "keras":
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, batch_size=batch_size)
-        savedmodel_callback = SavedModelCallback(model_dir)
+        # savedmodel_callback = SavedModelCallback(model_dir)
+        savedmodel_callback = tf.keras.callbacks.ModelCheckpoint(model_dir)
 
         # MLP
         # train_dataset = stock_data.csv_input_fn_estimate(training_data_path, keras_model.input_names, one_hot=True)
@@ -92,8 +93,8 @@ def evaluate():
         raise RuntimeError("Model is not trained")
 
     if train_use == "keras":
-        if tf.__version__ == "1.13.1":
-            keras_model = tf.contrib.saved_model.load_keras_model(model_dir)
+        if tf.__version__ >= "1.13.1":
+            keras_model = tf.keras.experimental.load_from_saved_model(model_dir)
         else:
             keras_model = tf.keras.experimental.load_from_saved_model(model_dir)
 

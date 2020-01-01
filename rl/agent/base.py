@@ -1,5 +1,5 @@
-import numpy as np
 import backtrader as bt
+import numpy as np
 
 
 class RLBaseAgent:
