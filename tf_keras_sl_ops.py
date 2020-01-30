@@ -39,6 +39,8 @@ def train():
     builder = TreeModelBuilder(model_config_path)
     keras_model = builder.get_model()
 
+    print(keras_model.input_names)
+
     if train_use == "keras":
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
         # savedmodel_callback = SavedModelCallback(model_dir)
@@ -93,11 +95,7 @@ def evaluate():
         raise RuntimeError("Model is not trained")
 
     if train_use == "keras":
-        if tf.__version__ >= "1.13.1":
-            keras_model = tf.keras.experimental.load_from_saved_model(model_dir)
-        else:
-            keras_model = tf.keras.experimental.load_from_saved_model(model_dir)
-
+        keras_model = tf.keras.models.load_model(model_dir)
         keras_model.summary()
 
         schema = CSVDataSchema(schema_config_path)

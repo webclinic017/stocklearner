@@ -119,25 +119,31 @@ def csv_input_fn(csv_path, batch_size=None, buffer_size=None, repeat=None, one_h
 
 
 if __name__ == "__main__":
-    tf.compat.v1.enable_eager_execution()
+    type = "basic"
+    if type == "basic":
+        data_source = "../test_data/stock/basic/"
+        schema_config_path = "../config_file/schema/basic_data_schema.yaml"
+    else:
+        data_source = "../test_data/stock/tech/"
+        schema_config_path = "../config_file/schema/tech_data_schema.yaml"
 
-    data_source = "../test_data/stock/"
-    ds = csv_input_fn(data_source, batch_size=32, repeat=-1, one_hot=True)
-    rnn_ds = csv_input_fn_estimate_rnn(data_source, input_name="main_input", batch_size=3, time_steps=5)
+    p_time_steps = 10
+    p_batch_size = 32
+    p_input_names = ["main_input"]
 
-    # ds = ds.batch(20)
-    # ds = ds.repeat(-1)
-    iterator = tf.compat.v1.data.make_one_shot_iterator(rnn_ds)
+    from feed.data_schema import CSVDataSchema
+
+    schema = CSVDataSchema(schema_config_path)
+    input_fn = schema.get_input_fn()
+    train_dataset = input_fn(data_source,
+                             p_input_names,
+                             p_time_steps,
+                             p_batch_size,
+                             one_hot=True)
+
+    train_dataset = train_dataset.repeat(-1)
+
+    iterator = tf.compat.v1.data.make_one_shot_iterator(train_dataset)
     next_xs, next_ys = iterator.get_next()
-    print(next_xs)
-    print(next_ys)
-    s = tf.slice(next_ys, [0, 4, 0], [3, 1, 1])
-    print(s)
-    s = tf.reshape(s, [-1, 1])
-    print(s)
-    # with tf.Session() as sess:
-    #     next_xs, next_ys = iterator.get_next()
-    #     step = 0
-    #     while step <= 50000:
-    #         raw_    #         step = step + 1xs, raw_ys = sess.run([next_xs, next_ys])
-    #         print(raw_ys)
+    print(next_xs)  # [batch_size, time_steps, features]
+    print(next_ys)  # [batch_size, one_hot_label]

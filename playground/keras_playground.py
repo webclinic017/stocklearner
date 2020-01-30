@@ -94,13 +94,17 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 model.summary()
-model.fit(x_train, y_train,
-          epochs=500,
-          batch_size=128,
-          verbose=0)
-score = model.evaluate(x_test, y_test, batch_size=128)
-predict = model.predict(x_predict)
-predict_c = model.predict_classes(x_predict)
-print(predict)
-print(np.argmax(predict))
-print(predict_c)
+# model.fit(x_train, y_train,
+#           epochs=500,
+#           batch_size=128,
+#           verbose=0)
+# score = model.evaluate(x_test, y_test, batch_size=128)
+# predict = model.predict(x_predict)
+# predict_c = model.predict_classes(x_predict)
+# print(predict)
+# print(np.argmax(predict))
+# print(predict_c)
+
+seq = tf.constant([1, 0, 1, 1, 0])
+b = tf.cast(tf.math.equal(seq, 0), tf.float32)
+print(b)

@@ -28,7 +28,8 @@ class CSVDataSchema:
 
         raise NotImplementedError
 
-    def tf_estimate_transformer_input_fn(self, csv_path, input_name, time_steps, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
+    def tf_estimate_transformer_input_fn(self, csv_path, input_name, time_steps, batch_size, buffer_size=None,
+                                         repeat=None, one_hot=False):
         def _parse_line(line):
             fields = tf.io.decode_csv(records=line, record_defaults=self.field_defaults)
             labels = fields[-1:]
