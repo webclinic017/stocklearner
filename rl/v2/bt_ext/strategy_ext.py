@@ -108,7 +108,7 @@ class RLCommonStrategy(bt.Strategy):
         self.current_value = round(self.broker.getvalue(), 2)
         self.current_observation, self.done = self._get_observation(date=self.date)
         self.reward = self._get_reward()
-        self.action = self.agent.choose(self.current_observation)
+        self.action = self.agent.choose_action(self.current_observation)
 
         if self.action == self.agent.Hold:
             pass
