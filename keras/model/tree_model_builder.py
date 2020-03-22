@@ -1,7 +1,8 @@
-import yaml
 import tensorflow as tf
-from keras.fn_util import get_keras_layer
+import yaml
 from anytree import Node, RenderTree, LevelOrderGroupIter
+
+from keras.fn_util import get_keras_layer
 
 
 class TreeModelBuilder:
@@ -20,7 +21,7 @@ class TreeModelBuilder:
         self.inputs = []
         self.outputs = []
 
-        with tf.variable_scope(model_name):
+        with tf.compat.v1.variable_scope(model_name):
             self._build_layers()
             self._build_tree()
             self._build_ffn()

@@ -1,8 +1,3 @@
-import numpy as np
-import pandas as pd
-
-
-
 # OUTPUT_SIZE = 2
 # TIME_STEPS = 2
 #
@@ -47,15 +42,15 @@ import pandas as pd
 # logger.info("Finish")
 
 # import gym
-# env = gym.make('MountainCar-v0')
+# bt_ext = gym.make('MountainCar-v0')
 # for i_episode in range(200):
-#     observation = env.reset()
+#     observation = bt_ext.reset()
 #     for t in range(1000):
-#         env.render()
+#         bt_ext.render()
 #         # print(observation)
-#         action = env.action_space.sample()
+#         action = bt_ext.action_space.sample()
 #         # print(action)
-#         observation, reward, done, info = env.step(action)
+#         observation, reward, done, info = bt_ext.step(action)
 #         if done:
 #             print("Episode finished after {} timesteps".format(t+1))
 #             break

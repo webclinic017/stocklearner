@@ -1,21 +1,21 @@
-from os.path import join
-from os import listdir
-import yaml
 import random
+from os import listdir
+from os.path import join
+
+import yaml
+
 from feed.bt_data import BTCSVBasicData
-from rl.agent.base import *
-from rl.agent.tf_keras_dqn_agent import DQNAgent
-from rl.env.cerebro_ext import RLExtCerebro
-from rl.env.sizer_ext import PercentSizer
+from rl.v1.agent import DQNAgent
+from rl.v1.env.cerebro_ext import RLExtCerebro
+from rl.v1.env.sizer_ext import PercentSizer
 
-
-APP_CONFIG_FILE_PATH = "./tf_keras_rl_ops.yaml"
+APP_CONFIG_FILE_PATH = "./config_file/train/tf_keras_rl_ops.yaml"
 
 yaml_file = open(APP_CONFIG_FILE_PATH, 'r', encoding='utf-8')
 yaml_config = yaml.load(yaml_file.read())
 
 data_path = yaml_config["dataset"]["data_path"]
-# TODO: Tech data columns
+# TODO: Tech schema columns
 schema_path = yaml_config["dataset"]["schema_path"]
 episode = yaml_config["run"]["episode"]
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         # Add the Data Feed to Cerebro
         cerebro.adddata(data)
 
-        # Add additional data frame
+        # Add additional schema frame
         cerebro.adddf(curr_data_path, columns=RLExtCerebro.BASIC_COLUMNS)
         cerebro.addscaleddf(curr_scaled_data_path, columns=RLExtCerebro.BASIC_COLUMNS)
         cerebro.addglobalstep(global_step)

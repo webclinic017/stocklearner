@@ -59,13 +59,13 @@
 #     result = int_to_char[index]
 #     seq_in = [int_to_char[value] for value in pattern]
 
+# Generate dummy schema
+import numpy as np
 import tensorflow as tf
+from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Activation
 from tensorflow.keras.optimizers import SGD
 
-# Generate dummy data
-import numpy as np
 x_train = np.random.random((10000, 20))
 y_train = tf.keras.utils.to_categorical(np.random.randint(10, size=(10000, 1)), num_classes=10)
 
@@ -80,7 +80,7 @@ print(y_predict)
 
 model = Sequential()
 # Dense(64) is a fully-connected layer with 64 hidden units.
-# in the first layer, you must specify the expected input data shape:
+# in the first layer, you must specify the expected input schema shape:
 # here, 20-dimensional vectors.
 model.add(Dense(64, activation='relu', input_dim=20))
 model.add(Dropout(0.5))
@@ -94,13 +94,17 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 model.summary()
-model.fit(x_train, y_train,
-          epochs=500,
-          batch_size=128,
-          verbose=0)
-score = model.evaluate(x_test, y_test, batch_size=128)
-predict = model.predict(x_predict)
-predict_c = model.predict_classes(x_predict)
-print(predict)
-print(np.argmax(predict))
-print(predict_c)
+# model.fit(x_train, y_train,
+#           epochs=500,
+#           batch_size=128,
+#           verbose=0)
+# score = model.evaluate(x_test, y_test, batch_size=128)
+# predict = model.predict(x_predict)
+# predict_c = model.predict_classes(x_predict)
+# print(predict)
+# print(np.argmax(predict))
+# print(predict_c)
+
+seq = tf.constant([1, 0, 1, 1, 0])
+b = tf.cast(tf.math.equal(seq, 0), tf.float32)
+print(b)

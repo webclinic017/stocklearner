@@ -1,7 +1,8 @@
 import os
-import yaml
-import tensorflow as tf
 from os.path import join
+
+import tensorflow as tf
+import yaml
 
 
 class CSVDataSchema:
@@ -27,9 +28,10 @@ class CSVDataSchema:
 
         raise NotImplementedError
 
-    def tf_estimate_transformer_input_fn(self, csv_path, input_name, time_steps, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
+    def tf_estimate_transformer_input_fn(self, csv_path, input_name, time_steps, batch_size, buffer_size=None,
+                                         repeat=None, one_hot=False):
         def _parse_line(line):
-            fields = tf.decode_csv(line, self.field_defaults)
+            fields = tf.io.decode_csv(records=line, record_defaults=self.field_defaults)
             labels = fields[-1:]
             fields = fields[1:-1]
             features = tf.reshape(fields, [batch_size, time_steps, -1])
@@ -71,7 +73,7 @@ class CSVDataSchema:
     def tf_estimate_input_fn(self, csv_path, input_name, time_steps, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
 
         def _parse_line_rnn(line):
-            fields = tf.decode_csv(line, self.field_defaults)
+            fields = tf.io.decode_csv(records=line, record_defaults=self.field_defaults)
             labels = fields[-1:]
             fields = fields[1:-1]
             fields = tf.reshape(fields, [batch_size, time_steps, -1])
@@ -93,7 +95,7 @@ class CSVDataSchema:
             return features, labels
 
         def _parse_line(line):
-            fields = tf.decode_csv(line, self.field_defaults)
+            fields = tf.io.decode_csv(records=line, record_defaults=self.field_defaults)
             labels = fields[-1:]
             fields = fields[1:-1]
             features = dict(zip(input_name, [fields]))
@@ -131,7 +133,7 @@ class CSVDataSchema:
 
     def tf_ds_input_fn(self, csv_path, batch_size=None, buffer_size=None, repeat=None, one_hot=False):
         def _parse_line(line):
-            fields = tf.decode_csv(line, self.field_defaults)
+            fields = tf.io.decode_csv(records=line, record_defaults=self.field_defaults)
             features = dict(zip(self.columns, fields))
             features.pop("DATE")
             label = features.pop("LABEL")
@@ -165,7 +167,7 @@ class CSVDataSchema:
 
 
 if __name__ == "__main__":
-    tf.enable_eager_execution()
+    tf.compat.v1.enable_eager_execution()
 
     data_schema_file_path = "../config_file/yaml_config/basic_data_schema.yaml"
 
@@ -179,7 +181,7 @@ if __name__ == "__main__":
                                                  time_steps=5,
                                                  batch_size=1,
                                                  one_hot=True)
-    iterator = ds.make_one_shot_iterator()
+    iterator = tf.compat.v1.data.make_one_shot_iterator(ds)
     for i in range(5):
         next_xs, next_ys = iterator.get_next()
         print(next_xs)

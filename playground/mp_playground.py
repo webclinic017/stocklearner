@@ -1,9 +1,9 @@
+import configparser
 import multiprocessing
 import time
-import configparser
-from os.path import join
 from os import listdir
-from util import model_util
+from os.path import join
+
 from feed import csv_data as stock_data
 
 CONFIG_FILE_PATH = "./app.config_file"

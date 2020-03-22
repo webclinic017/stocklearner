@@ -1,5 +1,7 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
+
 import backtrader as bt
+
 from feed.bt_data import BTCSVBasicData
 
 
@@ -17,7 +19,7 @@ class TestStrategy(bt.Strategy):
             print('%s, %s' % (dt.isoformat(), txt))
 
     def __init__(self):
-        # Keep a reference to the "close" line in the data[0] dataseries
+        # Keep a reference to the "close" line in the schema[0] dataseries
         self.dataclose = self.datas[0].close
         self.p_change = self.datas[0].p_change
 
