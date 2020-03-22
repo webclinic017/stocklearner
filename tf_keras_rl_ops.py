@@ -5,10 +5,9 @@ from os.path import join
 import yaml
 
 from feed.bt_data import BTCSVBasicData
-from rl.agent.base import *
-from rl.agent.tf_keras_dqn_agent import DQNAgent
-from rl.env.cerebro_ext import RLExtCerebro
-from rl.env.sizer_ext import PercentSizer
+from rl.v1.agent import DQNAgent
+from rl.v1.env.cerebro_ext import RLExtCerebro
+from rl.v1.env.sizer_ext import PercentSizer
 
 APP_CONFIG_FILE_PATH = "./config_file/train/tf_keras_rl_ops.yaml"
 

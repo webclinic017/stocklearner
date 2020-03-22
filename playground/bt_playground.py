@@ -23,12 +23,17 @@ class TestStrategy(bt.Strategy):
         self.sma = bt.indicators.SimpleMovingAverage(
             self.datas[0], period=self.params.maperiod)
 
-
     def start(self):
         self.log("Strategy fn_start, I should only see once")
 
     def prenext(self):
         self.log("Strategy fn_prenext")
+
+    def nextstart_open(self):
+        self.log("Strategy fn_nextstart_open")
+
+    def next_open(self):
+        self.log("Strategy fn_next_open")
 
     def next(self):
         self.log("Strategy fn_next")
@@ -39,6 +44,7 @@ class TestStrategy(bt.Strategy):
     def stop(self):
         self.log("Strategy fn_end, I should only see at the end")
 
+
 if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
@@ -47,7 +53,7 @@ if __name__ == '__main__':
 
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
-    data_path = "./test_data/stock/000002.csv"
+    data_path = "../test_data/stock/basic/000002.csv"
 
     # Create a Data Feed
     data = BTCSVBasicData(

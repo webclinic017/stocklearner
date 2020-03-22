@@ -3,7 +3,7 @@ import random
 
 import numpy as np
 
-from rl.common.segment_tree import SumSegmentTree, MinSegmentTree
+from rl.v1.common.segment_tree import SumSegmentTree, MinSegmentTree
 
 
 class ReplayBuffer(object):

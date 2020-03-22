@@ -62,7 +62,7 @@ class RLCommonStrategy(bt.Strategy):
         # self.global_step = 0
         self.learning_freq = self.agent.learning_freq
 
-        # As env.step(), but next observation, reward and done will be given in next function.
+        # As bt_ext.step(), but next observation, reward and done will be given in next function.
     def notify_order(self, order):
         # self.log("notify_order " + str(order.status))
         if order.status in [order.Submitted, order.Accepted]:
@@ -137,7 +137,7 @@ class RLCommonStrategy(bt.Strategy):
         else:
             return get_data(self.df)
 
-    # As env.render(), but need to get observation and reward
+    # As bt_ext.render(), but need to get observation and reward
     def next(self):
         # Simply log the closing price of the series from the reference
         # self.log("Next Close, %.2f" % self.dataclose[0])

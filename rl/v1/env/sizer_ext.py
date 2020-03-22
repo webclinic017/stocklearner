@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/bt_ext python
 # -*- coding: utf-8; py-indent-offset:4 -*-
 ###############################################################################
 #

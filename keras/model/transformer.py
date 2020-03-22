@@ -23,11 +23,11 @@ print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('
 
 data_type = "tech"
 if data_type == "basic":
-    data_source = "./test_data/stock/basic/"
-    schema_config_path = "./config_file/schema/basic_data_schema.yaml"
+    data_source = "../../test_data/stock/basic/"
+    schema_config_path = "../../config_file/schema/basic_data_schema.yaml"
 else:
-    data_source = "./test_data/stock/tech/"
-    schema_config_path = "./config_file/schema/tech_data_schema.yaml"
+    data_source = "../../test_data/stock/tech/"
+    schema_config_path = "../../config_file/schema/tech_data_schema.yaml"
 
 schema = CSVDataSchema(schema_config_path)
 train_dataset = schema.tf_estimate_transformer_input_fn(data_source,
